@@ -76,7 +76,6 @@ public final class JettyContinuationTransportHandler extends AbstractTransportHa
      */
     private static final long DEFAULT_CONTINUATION_TIMEOUT = 20 * 1000;
 
-    private static final String CONTINUATION_KEY = JettyContinuationTransportHandler.class.getName() + ".Continuation";
     private static final Logger LOGGER = Logger.getLogger(JettyContinuationTransportHandler.class.getName());
 
     private volatile boolean is_open;

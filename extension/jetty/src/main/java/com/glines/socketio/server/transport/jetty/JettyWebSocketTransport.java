@@ -36,8 +36,6 @@ import org.eclipse.jetty.websocket.WebSocket;
 import org.eclipse.jetty.websocket.WebSocketFactory;
 import org.eclipse.jetty.websocket.WebSocketFactory.Acceptor;
 
-import com.glines.socketio.util.Web;
-
 public final class JettyWebSocketTransport extends AbstractTransport {
 
     private static final Logger LOGGER = Logger.getLogger(JettyWebSocketTransport.class.getName());

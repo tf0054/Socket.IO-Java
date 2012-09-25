@@ -61,12 +61,12 @@ public class GWTChatSocketServlet extends SocketIOServlet {
                 outbound.sendMessage(SocketIOFrame.JSON_MESSAGE_TYPE, new Gson().toJson(
                         Collections.singletonMap("welcome", "Welcome to GWT Chat!")));
             } catch (SocketIOException e) {
-            	// http://en.wikibooks.org/wiki/Java_Programming/Stack_trace
-            	   StringWriter outError = new StringWriter();
-            	   PrintWriter errorWriter = new PrintWriter( outError );
-            	   e.printStackTrace(errorWriter);
-            	logger.info("onConeect/Client: "+e+"\n"+outError.toString());
-                outbound.disconnect();
+				// http://en.wikibooks.org/wiki/Java_Programming/Stack_trace
+				StringWriter outError = new StringWriter();
+				PrintWriter errorWriter = new PrintWriter(outError);
+				e.printStackTrace(errorWriter);
+				logger.info("onConeect/Client: " + e + "\n" + outError.toString());
+				outbound.disconnect();
             }
             broadcast(SocketIOFrame.JSON_MESSAGE_TYPE, new Gson().toJson(
                     Collections.singletonMap("announcement", sessionId + " connected")));
@@ -94,17 +94,24 @@ public class GWTChatSocketServlet extends SocketIOServlet {
                 String parts[] = message.split("\\s+");
                 if (parts.length == 2) {
                     sleepTime = Integer.parseInt(parts[1]);
-                }
-                try {
-                    Thread.sleep(sleepTime * 1000);
-                } catch (InterruptedException e) {
-                    // Ignore
-                }
-                try {
-                    outbound.sendMessage(SocketIOFrame.JSON_MESSAGE_TYPE, new Gson().toJson(
-                            Collections.singletonMap("message", "Slept for " + sleepTime + " seconds.")));
-                } catch (SocketIOException e) {
-                    outbound.disconnect();
+	                try {
+	                    Thread.sleep(sleepTime * 1000);
+	                } catch (InterruptedException e) {
+	                    // Ignore
+	                }
+	                try {
+	                    outbound.sendMessage(SocketIOFrame.JSON_MESSAGE_TYPE, new Gson().toJson(
+	                            Collections.singletonMap("message", "Slept for " + sleepTime + " seconds.")));
+	                } catch (SocketIOException e) {
+	                    outbound.disconnect();
+	                }
+                }else{
+	                try {
+	                    outbound.sendMessage(SocketIOFrame.JSON_MESSAGE_TYPE, new Gson().toJson(
+	                            Collections.singletonMap("message", "please input like '/sleep 5'.")));
+	                } catch (SocketIOException e) {
+	                    outbound.disconnect();
+	                }
                 }
             } else {
                 broadcast(SocketIOFrame.JSON_MESSAGE_TYPE, new Gson().toJson(
@@ -115,13 +122,13 @@ public class GWTChatSocketServlet extends SocketIOServlet {
 
         private void broadcast(int messageType, String message) {
             for (GWTChatConnection c : connections) {
-                //if (c != this) {
+                if (c != this) {
                     try {
                         c.outbound.sendMessage(messageType, message);
                     } catch (IOException e) {
                         c.outbound.disconnect();
                     }
-                //}
+                }
             }
         }
     }

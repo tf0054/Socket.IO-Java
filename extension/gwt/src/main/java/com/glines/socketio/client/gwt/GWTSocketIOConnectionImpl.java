@@ -30,7 +30,6 @@ import com.glines.socketio.common.ConnectionState;
 import com.glines.socketio.common.DisconnectReason;
 import com.glines.socketio.common.SocketIOException;
 import com.google.gwt.core.client.JavaScriptObject;
-import com.google.gwt.json.client.JSONObject;
 
 public class GWTSocketIOConnectionImpl implements SocketIOConnection {
 	private static final class SocketIOImpl extends JavaScriptObject {
@@ -44,21 +43,26 @@ public class GWTSocketIOConnectionImpl implements SocketIOConnection {
 			socket.on('message', $entry(function(msg) {
 				if(msg.welcome){
       				impl.@com.glines.socketio.client.gwt.GWTSocketIOConnectionImpl::onMessage(Ljava/lang/String;)("{\"welcome\": \""+msg.welcome+"\"}");
-				}else if(msg.message){
-      				impl.@com.glines.socketio.client.gwt.GWTSocketIOConnectionImpl::onMessage(Ljava/lang/String;)("{\"message\": [\""+msg.message[0]+"\",\""+msg.message[1]+"\"]}");
 				}else if(msg.announcement){
       				impl.@com.glines.socketio.client.gwt.GWTSocketIOConnectionImpl::onMessage(Ljava/lang/String;)("{\"announcement\": \""+msg.announcement+"\"}");
+				}else if(msg.message){
+					if(isArray(msg.message)){
+      					impl.@com.glines.socketio.client.gwt.GWTSocketIOConnectionImpl::onMessage(Ljava/lang/String;)("{\"message\": [\""+msg.message[0]+"\",\""+msg.message[1]+"\"]}");
+      				}else{
+      					impl.@com.glines.socketio.client.gwt.GWTSocketIOConnectionImpl::onMessage(Ljava/lang/String;)("{\"message\": \""+msg.message+"\"}");
+      				}
 				}else{
 					$wnd.alert("cannot convert to string");
 				}
     		}));
-//			socket.on('message', $entry(function(messageType, message) {
-//      			impl.@com.glines.socketio.client.gwt.GWTSocketIOConnectionImpl::onMessage(ILjava/lang/String;)(messageType, message);
-//    		}));
 			socket.on('disconnect', $entry(function(dr, message) {
       			impl.@com.glines.socketio.client.gwt.GWTSocketIOConnectionImpl::onDisconnect(ILjava/lang/String;)(dr, message);
     		}));
-    		return socket;
+			function isArray(a)
+			{
+			    return Object.prototype.toString.apply(a) === '[object Array]';
+			}
+			return socket;
 		}-*/;
 
 		protected SocketIOImpl() {
@@ -81,13 +85,7 @@ public class GWTSocketIOConnectionImpl implements SocketIOConnection {
 	    public native void disconnect() /*-{this.disconnect();}-*/;
 
 	    public native void send(int messageType, String data) /*-{
-	    	// this.transport.send(messageType, data);
-	    	// https://github.com/LearnBoost/socket.io-spec
-	    	// 3:1::blabla 
 			this.socket.transport.send("3:1::"+data);
-			// http://d.hatena.ne.jp/Jxck/20110730/1312042603
-			// this.transport.send("5:::"name:"message""+data);
-			
 	    }-*/;
 	}
 	
