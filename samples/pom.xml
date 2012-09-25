@@ -7,8 +7,8 @@
     <parent>
         <groupId>com.glines.socketio</groupId>
         <artifactId>socketio</artifactId>
-        <version>0.1-SNAPSHOT</version>
-        <relativePath>..</relativePath>
+        <version>0.2</version>
+        <relativePath>../pom.xml</relativePath>
     </parent>
 
     <groupId>com.glines.socketio.sample</groupId>
@@ -19,10 +19,6 @@
     <description>Socket.IO Java Samples</description>
 
     <modules>
-        <module>echo</module>
-        <module>broadcast</module>
-        <module>eventbus</module>
-        <module>chat</module>
         <module>chat-gwt</module>
     </modules>
 

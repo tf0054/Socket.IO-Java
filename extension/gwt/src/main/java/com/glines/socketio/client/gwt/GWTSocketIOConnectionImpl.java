@@ -30,17 +30,31 @@ import com.glines.socketio.common.ConnectionState;
 import com.glines.socketio.common.DisconnectReason;
 import com.glines.socketio.common.SocketIOException;
 import com.google.gwt.core.client.JavaScriptObject;
+import com.google.gwt.json.client.JSONObject;
 
 public class GWTSocketIOConnectionImpl implements SocketIOConnection {
 	private static final class SocketIOImpl extends JavaScriptObject {
 		public static native SocketIOImpl create(GWTSocketIOConnectionImpl impl, String host, String port) /*-{
-			var socket = new $wnd.io.Socket(host, port != null ? {port: port} : {});
+			//var socket = new $wnd.io.Socket(host != null ? {host: host} : {host: "localhost"}, port != null ? {port: port} : {port: "8081"});
+			//var socket = new $wnd.io.Socket({host: "localhost", port: "8080", rememberTransport: false, transports:["websocket"] });
+			var socket = $wnd.io.connect('http://localhost:8080',{rememberTransport: false, transports:["websocket"]});
 			socket.on('connect', $entry(function() {
       			impl.@com.glines.socketio.client.gwt.GWTSocketIOConnectionImpl::onConnect()();
     		}));
-			socket.on('message', $entry(function(messageType, message) {
-      			impl.@com.glines.socketio.client.gwt.GWTSocketIOConnectionImpl::onMessage(ILjava/lang/String;)(messageType, message);
+			socket.on('message', $entry(function(msg) {
+				if(msg.welcome){
+      				impl.@com.glines.socketio.client.gwt.GWTSocketIOConnectionImpl::onMessage(Ljava/lang/String;)("{\"welcome\": \""+msg.welcome+"\"}");
+				}else if(msg.message){
+      				impl.@com.glines.socketio.client.gwt.GWTSocketIOConnectionImpl::onMessage(Ljava/lang/String;)("{\"message\": [\""+msg.message[0]+"\",\""+msg.message[1]+"\"]}");
+				}else if(msg.announcement){
+      				impl.@com.glines.socketio.client.gwt.GWTSocketIOConnectionImpl::onMessage(Ljava/lang/String;)("{\"announcement\": \""+msg.announcement+"\"}");
+				}else{
+					$wnd.alert("cannot convert to string");
+				}
     		}));
+//			socket.on('message', $entry(function(messageType, message) {
+//      			impl.@com.glines.socketio.client.gwt.GWTSocketIOConnectionImpl::onMessage(ILjava/lang/String;)(messageType, message);
+//    		}));
 			socket.on('disconnect', $entry(function(dr, message) {
       			impl.@com.glines.socketio.client.gwt.GWTSocketIOConnectionImpl::onDisconnect(ILjava/lang/String;)(dr, message);
     		}));
@@ -50,17 +64,32 @@ public class GWTSocketIOConnectionImpl implements SocketIOConnection {
 		protected SocketIOImpl() {
 	    }
 
-	    public native int getSocketState() /*-{return this.socketState;}-*/;
+	    public native int getSocketState() /*-{ ;
+	    	if(this.socket.connecting){
+	    		return 0;
+	    	}else if(this.socket.connected){
+	    		return 1;
+	    	}else{
+	    		return 3;
+	    	}
+	    }-*/;
 
-	    public native void connect() /*-{this.connect();}-*/;
+	    public native void connect() /*-{this.socket.connect();}-*/;
 
 	    public native void close() /*-{this.close();}-*/;
 
 	    public native void disconnect() /*-{this.disconnect();}-*/;
 
-	    public native void send(int messageType, String data) /*-{this.send(messageType, data);}-*/;
+	    public native void send(int messageType, String data) /*-{
+	    	// this.transport.send(messageType, data);
+	    	// https://github.com/LearnBoost/socket.io-spec
+	    	// 3:1::blabla 
+			this.socket.transport.send("3:1::"+data);
+			// http://d.hatena.ne.jp/Jxck/20110730/1312042603
+			// this.transport.send("5:::"name:"message""+data);
+			
+	    }-*/;
 	}
-	
 	
 	private final SocketIOConnectionListener listener;
 	private final String host;
@@ -145,4 +174,8 @@ public class GWTSocketIOConnectionImpl implements SocketIOConnection {
 		listener.onMessage(messageType, message);
 	}
 	
+	@SuppressWarnings("unused")
+	private void onMessage(String msg) {
+		listener.onMessage(msg);
+	}	
 }

@@ -8,7 +8,7 @@
         <groupId>com.glines.socketio</groupId>
         <artifactId>socketio</artifactId>
         <version>0.2</version>
-        <relativePath>..</relativePath>
+        <relativePath>../pom.xml</relativePath>
     </parent>
 
     <groupId>com.glines.socketio.extension</groupId>
@@ -20,7 +20,6 @@
 
     <modules>
         <module>jetty</module>
-        <module>jre</module>
         <module>gwt</module>
     </modules>
 

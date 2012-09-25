@@ -5,10 +5,10 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>com.glines.socketio.sample</groupId>
-        <artifactId>socketio-sample</artifactId>
-        <version>0.1-SNAPSHOT</version>
-        <relativePath>..</relativePath>
+        <groupId>com.glines.socketio</groupId>
+        <artifactId>socketio</artifactId>
+        <version>0.2</version>
+        <relativePath>../..</relativePath>
     </parent>
 
     <artifactId>socketio-sample-chat-gwt</artifactId>
@@ -64,7 +64,11 @@
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
         </dependency>
-
+            <dependency>
+                <groupId>org.testatoo.container</groupId>
+                <artifactId>testatoo-container-jetty</artifactId>
+                <version>1.0-rc1</version>
+            </dependency>
         <dependency>
             <groupId>com.google.gwt</groupId>
             <artifactId>gwt-user</artifactId>

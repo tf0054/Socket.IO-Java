@@ -31,4 +31,5 @@
     <inherits name="com.glines.socketio.client.Client"/>
     <source path="client"/>
     <entry-point class="com.glines.socketio.sample.gwtchat.client.GWTChatClient"/>
+    
 </module>

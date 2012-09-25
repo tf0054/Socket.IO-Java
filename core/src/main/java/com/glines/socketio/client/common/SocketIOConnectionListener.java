@@ -33,4 +33,5 @@ public interface SocketIOConnectionListener {
     void onConnect();
     void onDisconnect(DisconnectReason reason, String errorMessage);
     void onMessage(int messageType, String message);
+    void onMessage(String msg);
 }

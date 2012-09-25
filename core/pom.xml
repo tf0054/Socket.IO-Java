@@ -28,6 +28,11 @@
             <artifactId>log4j</artifactId>
             <optional>true</optional>
         </dependency>
+        <dependency>
+            <groupId>com.google.gwt</groupId>
+            <artifactId>gwt-user</artifactId>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
     
 </project>

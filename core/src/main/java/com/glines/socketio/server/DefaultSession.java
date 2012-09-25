@@ -61,6 +61,11 @@ class DefaultSession implements SocketIOSession {
         this.socketIOSessionManager = socketIOSessionManager;
         this.inbound = inbound;
         this.sessionId = sessionId;
+        if(inbound != null){
+        	LOGGER.log(Level.INFO,"DefaultSession was created with inbound != null.");
+        }else{
+        	LOGGER.log(Level.INFO,"DefaultSession was created with inbound == null.");
+        }
     }
 
     @Override
@@ -195,6 +200,7 @@ class DefaultSession implements SocketIOSession {
 
     @Override
     public void onMessage(SocketIOFrame message) {
+        LOGGER.log(Level.INFO, "Session[" + sessionId + "] with state = "+state+" on "+ this.toString());
         switch (message.getFrameType()) {
             case CONNECT:
                 onPing(message.getData());
@@ -279,6 +285,7 @@ class DefaultSession implements SocketIOSession {
 
     @Override
     public void onConnect(TransportHandler handler) {
+        LOGGER.log(Level.INFO, "Session[" + sessionId + "] with state = "+state+" on "+ this.toString());
         if (handler == null) {
             state = ConnectionState.CLOSED;
             inbound = null;
@@ -286,6 +293,7 @@ class DefaultSession implements SocketIOSession {
         } else if (this.handler == null) {
             this.handler = handler;
             if (inbound == null) {
+            	LOGGER.log(Level.INFO,"hander was aborted.");
                 state = ConnectionState.CLOSED;
                 handler.abort();
             } else {
