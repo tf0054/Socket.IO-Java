@@ -170,14 +170,6 @@ public class GWTChatClient implements EntryPoint, SocketIOConnectionListener {
 			}
 		}
 	}
-
-	@Override
-	public void onMessage(String message) {
-			JSONObject obj = JSONParser.parseStrict(message).isObject();
-			if (obj != null) {
-				onMessage(obj);
-			}
-	}
 	
 	@Override
 	public void onMessage(int messageType, String message) {

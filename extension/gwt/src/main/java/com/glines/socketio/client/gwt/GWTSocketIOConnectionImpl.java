@@ -39,7 +39,7 @@ public class GWTSocketIOConnectionImpl implements SocketIOConnection {
       			impl.@com.glines.socketio.client.gwt.GWTSocketIOConnectionImpl::onConnect()();
     		}));
 			socket.on('message', $entry(function(msg) {
-				impl.@com.glines.socketio.client.gwt.GWTSocketIOConnectionImpl::onMessage(Ljava/lang/String;)($wnd.io.JSON.stringify(msg));
+				impl.@com.glines.socketio.client.gwt.GWTSocketIOConnectionImpl::onMessage(ILjava/lang/String;)(1, $wnd.io.JSON.stringify(msg));
     		}));
 			socket.on('disconnect', $entry(function(dr, message) {
       			impl.@com.glines.socketio.client.gwt.GWTSocketIOConnectionImpl::onDisconnect(ILjava/lang/String;)(dr, message);
@@ -157,9 +157,4 @@ public class GWTSocketIOConnectionImpl implements SocketIOConnection {
 	private void onMessage(int messageType, String message) {
 		listener.onMessage(messageType, message);
 	}
-	
-	@SuppressWarnings("unused")
-	private void onMessage(String msg) {
-		listener.onMessage(msg);
-	}	
 }
