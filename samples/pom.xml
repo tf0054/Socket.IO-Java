@@ -19,6 +19,7 @@
     <description>Socket.IO Java Samples</description>
 
     <modules>
+        <module>chat</module>
         <module>chat-gwt</module>
     </modules>
 

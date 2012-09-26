@@ -28,8 +28,6 @@
 <html>
   <head>
     <title>socket.io client test</title>
-
-    <script src="/json.js"></script> <!-- for ie -->
     <script src="/socket.io/socket.io.js"></script>
   </head>
   <body>
@@ -44,7 +42,17 @@
       function message(obj){
         if ('welcome' in obj) addLine('<em>' + esc(obj.welcome) + '</em>');
         else if ('announcement' in obj) addLine('<em>' + esc(obj.announcement) + '</em>');
-        else if ('message' in obj) addLine('<b>' + esc(obj.message[0]) + ':</b> ' + esc(obj.message[1]));
+        else if ('message' in obj){
+        	if(isArray(obj.message)){
+        		addLine('<b>' + esc(obj.message[0]) + ':</b> ' + esc(obj.message[1]));
+        	}else{
+        		addLine('<b>Server:</b> ' + esc(obj.message));
+        	}
+        }
+      }
+      
+      function isArray(a){
+  		return Object.prototype.toString.apply(a) === '[object Array]';
       }
       
       function send(){
@@ -86,20 +94,9 @@
     	  }
       }
       
-      var socket = new io.Socket(null, {});
-      socket.setMessageParser(socket.JSON_MESSAGE, {
-    	  encode: function(obj) {
-    		  return JSON.stringify(obj);
-    	  },
-    	  decode: function(str) {
-    		  return JSON.parse(str);
-    	  }
-      });
-      socket.connect();
-      socket.on('message', function(mtype, obj){
-    	if (mtype == socket.JSON_MESSAGE) {
-			message(obj);
-    	}
+      var socket = io.connect('http://localhost:8080',{rememberTransport: false, transports:["websocket"]});
+ 	  socket.on('message', function(msg){
+			message(msg);
       });
       socket.on('connect', function(reason, error){
           document.getElementById('form').style.display='block';
