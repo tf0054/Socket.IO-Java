@@ -21,6 +21,7 @@
     <modules>
         <module>chat</module>
         <module>chat-gwt</module>
+        <module>echo</module>
     </modules>
 
     <profiles>
