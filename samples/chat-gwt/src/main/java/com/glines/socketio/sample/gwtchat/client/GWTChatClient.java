@@ -89,7 +89,7 @@ public class GWTChatClient implements EntryPoint, SocketIOConnectionListener {
 		btnSubmit.setHeight("30");
 		submitPanel.add(btnSubmit);
 		
-		socket = GWTSocketIOConnectionFactory.INSTANCE.create(this, "localhost", (short)0);
+		socket = GWTSocketIOConnectionFactory.INSTANCE.create(this, "", (short)0);
 		socket.connect();
 	}
 	
@@ -117,7 +117,7 @@ public class GWTChatClient implements EntryPoint, SocketIOConnectionListener {
 			} catch (SocketIOException e) {
 				// Ignore. This wwon't happen in the GWT version.
 			}
-		}
+		} 
 	}
 
 	@Override
