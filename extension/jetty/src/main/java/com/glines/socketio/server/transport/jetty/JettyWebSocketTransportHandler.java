@@ -128,6 +128,11 @@ public final class JettyWebSocketTransportHandler extends AbstractTransportHandl
     }
 
     @Override
+    public void emitMessage(String strKey, String message) throws SocketIOException {
+        sendMessage(SocketIOFrame.JSON_MESSAGE_TYPE, "{\""+strKey+"\":\""+message+"\"}");
+    }
+
+    @Override
     public void sendMessage(int messageType, String message)
             throws SocketIOException {
         if (outbound.isOpen() && getSession().getConnectionState() == ConnectionState.CONNECTED) {

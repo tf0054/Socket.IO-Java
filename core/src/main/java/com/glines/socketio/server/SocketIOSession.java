@@ -85,7 +85,7 @@ public interface SocketIOSession {
 	 * If a timeout timer is set, then it will be reset.
 	 * @param message
 	 */
-	void onMessage(String message);
+	void onMessage(int frameType, String message);
 	
 	/**
 	 * Pass disconnect through to contained SocketIOInbound and update any internal state.

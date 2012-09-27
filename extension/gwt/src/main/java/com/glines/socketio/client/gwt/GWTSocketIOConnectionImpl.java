@@ -29,6 +29,7 @@ import com.glines.socketio.client.common.SocketIOConnectionListener;
 import com.glines.socketio.common.ConnectionState;
 import com.glines.socketio.common.DisconnectReason;
 import com.glines.socketio.common.SocketIOException;
+import com.glines.socketio.server.SocketIOFrame;
 import com.google.gwt.core.client.JavaScriptObject;
 
 public class GWTSocketIOConnectionImpl implements SocketIOConnection {
@@ -67,7 +68,12 @@ public class GWTSocketIOConnectionImpl implements SocketIOConnection {
 	    public native void disconnect() /*-{this.socket.disconnect();}-*/;
 
 	    public native void send(int messageType, String data) /*-{
-			this.socket.transport.send("3:1::"+data);
+	    	// the messageType is 0 or 1 and isn't same as the FrameType (3=Text,4=Json,etc)
+	    	if(messageType == 0){
+				this.socket.transport.send("3:1::"+data);
+			}else{
+				this.socket.transport.send("4:1::"+data);
+			}
 	    }-*/;
 	}
 	
@@ -130,7 +136,13 @@ public class GWTSocketIOConnectionImpl implements SocketIOConnection {
 
 	@Override
 	public void sendMessage(String message) throws SocketIOException {
-		sendMessage(0, message);
+		sendMessage(SocketIOFrame.TEXT_MESSAGE_TYPE, message);
+	}
+
+	@Override
+	public void emitMessage(String strKey, String message) throws SocketIOException {
+		// This is for emitting message.
+		sendMessage(SocketIOFrame.JSON_MESSAGE_TYPE, "{\""+strKey+"\":\""+message+"\"}");
 	}
 
 	@Override

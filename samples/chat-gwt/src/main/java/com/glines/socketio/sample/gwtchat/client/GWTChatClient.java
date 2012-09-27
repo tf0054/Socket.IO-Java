@@ -113,7 +113,7 @@ public class GWTChatClient implements EntryPoint, SocketIOConnectionListener {
 			addLine("<b>you:</b> " + text);
 			textBox.setText("");
 			try {
-				socket.sendMessage(text);
+				socket.emitMessage("message", text);
 			} catch (SocketIOException e) {
 				// Ignore. This wwon't happen in the GWT version.
 			}

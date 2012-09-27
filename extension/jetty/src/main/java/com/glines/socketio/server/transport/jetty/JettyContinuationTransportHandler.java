@@ -178,6 +178,13 @@ public final class JettyContinuationTransportHandler extends AbstractTransportHa
     }
 
     @Override
+    public void emitMessage(String strKey, String message) throws SocketIOException {
+        if (LOGGER.isLoggable(Level.FINE))
+            LOGGER.log(Level.FINE, "Session[" + getSession().getSessionId() + "]: " + "emitMessage(String): " + message);
+        sendMessage(SocketIOFrame.JSON_MESSAGE_TYPE, "{\""+strKey+"\":\""+message+"\"}");
+    }
+
+    @Override
     public void sendMessage(int messageType, String message) throws SocketIOException {
         if (LOGGER.isLoggable(Level.FINE))
             LOGGER.log(Level.FINE, "Session[" + getSession().getSessionId() + "]: " + "sendMessage(int, String): [" + messageType + "]: " + message);

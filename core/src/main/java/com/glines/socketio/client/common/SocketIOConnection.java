@@ -73,6 +73,14 @@ public interface SocketIOConnection {
 	void sendMessage(String message) throws SocketIOException;
 
 	/**
+	 * Emit a message to server
+	 * 
+	 * @param message
+	 * @throws IllegalStateException if the socket is not CONNECTED.
+	 */
+	void emitMessage(String strKey, String message) throws SocketIOException;
+
+	/**
 	 * Send a message. With a default priority of 0.
 	 * 
 	 * @param message

@@ -64,5 +64,15 @@ public interface SocketIOOutbound {
      * @throws IllegalStateException if the socket is not CONNECTED.
      * @throws SocketIOException
      */
+    void emitMessage(String strKey, String message) throws SocketIOException;
+
+    /**
+     * Send a message.
+     *
+     * @param messageType
+     * @param message
+     * @throws IllegalStateException if the socket is not CONNECTED.
+     * @throws SocketIOException
+     */
     void sendMessage(int messageType, String message) throws SocketIOException;
 }

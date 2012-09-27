@@ -31,6 +31,9 @@ import com.glines.socketio.server.SocketIOInbound;
 import com.glines.socketio.server.SocketIOOutbound;
 import com.glines.socketio.server.SocketIOServlet;
 import com.google.gson.Gson;
+import com.google.gwt.json.client.JSONParser;
+import com.google.gwt.json.client.JSONObject;
+import com.google.gwt.core.client.JavaScriptObject;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
@@ -114,9 +117,15 @@ public class GWTChatSocketServlet extends SocketIOServlet {
 	                }
                 }
             } else {
-                broadcast(SocketIOFrame.JSON_MESSAGE_TYPE, new Gson().toJson(
-                        Collections.singletonMap("message",
-                                new String[]{sessionId.toString(), (String) message})));
+            	/*
+            	JSONObject objOldMsg = JSONParser.parseLenient(message).isObject();
+            	JSONObject objNewMsg = JSONParser.parseLenient("{\"message\":[\""+sessionId.toString()+"\",\""+objOldMsg.get("message")+"\"]}").isObject();
+            	broadcast(messageType, objNewMsg.toString());
+            	*/
+            	// TODO: change this code to general one..
+            	message = message.replaceFirst(":\"", ":[\""+sessionId.toString()+"\",\"");
+            	message = message.replaceFirst("\"}", "\"]}");
+            	broadcast(messageType, message);
             }
         }
 
