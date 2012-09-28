@@ -33,6 +33,8 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 
 /**
  * @author Mathieu Carbou (mathieu.carbou@gmail.com)
@@ -317,7 +319,15 @@ class DefaultSession implements SocketIOSession {
     public void onMessage(int frameType, String message) {
         if (inbound != null) {
             try {
-                inbound.onMessage(frameType, message);
+            	// try calling new-style method (all call will be treated as json).
+            	// TODO get key like "message" with parsing message as json.
+            	// TODO if the call with no key, should be with "message"
+            	// TODO is it great if we have no onMessage declarations on interface?
+            	if(!refrectionalCallOfInbound("message", message)){
+            		// cannot find method with key -> call old-style one.
+            		// TODO old-style one should be onMessage(String) like js one.
+            		inbound.onMessage(frameType, message);
+            	}
             } catch (Throwable e) {
                 if (LOGGER.isLoggable(Level.WARNING))
                     LOGGER.log(Level.WARNING, "Session[" + sessionId + "]: Exception thrown by SocketIOInbound.onMessage()", e);
@@ -325,6 +335,46 @@ class DefaultSession implements SocketIOSession {
         }
     }
 
+public boolean refrectionalCallOfInbound(String strKey, String strMsg){
+	// TODO method search and call with reflection is too slow??
+	Class c = inbound.getClass();  
+    if (LOGGER.isLoggable(Level.FINE))
+        LOGGER.log(Level.FINE, "Session[" + sessionId + "]: reflection was called.: " + c.toString());
+    Method[] methods = c.getMethods();
+    for(Method method : methods) {
+        // check the first part of this method  
+        if(method.getName().indexOf("onMessage") == 0){
+            // check args of this method
+            Class[] params = method.getParameterTypes();
+            if(params.length == 2){
+                //その引数がString型であるかチェック
+                if(params[0] == String.class && params[1] == String.class){
+                	if(!method.isAccessible())
+                		method.setAccessible(true);
+                	try {
+                	    if (LOGGER.isLoggable(Level.FINE))
+                	        LOGGER.log(Level.FINE, "Session[" + sessionId + "]: onMessage(String a, String b) was called " + c.toString());
+						method.invoke(inbound, strKey, strMsg);
+						return true;
+					} catch (IllegalArgumentException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (IllegalAccessException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (InvocationTargetException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+                }
+            }
+        }
+    }
+    if (LOGGER.isLoggable(Level.FINE))
+        LOGGER.log(Level.FINE, "Session[" + sessionId + "]: onMessage(String a) will be called " + c.toString());
+    // TODO should change onMessage(int, string) to onMessage(string). 
+	return false;    
+}
     @Override
     public void onDisconnect(DisconnectReason reason) {
         if (LOGGER.isLoggable(Level.FINE))

@@ -31,9 +31,6 @@ import com.glines.socketio.server.SocketIOInbound;
 import com.glines.socketio.server.SocketIOOutbound;
 import com.glines.socketio.server.SocketIOServlet;
 import com.google.gson.Gson;
-import com.google.gwt.json.client.JSONParser;
-import com.google.gwt.json.client.JSONObject;
-import com.google.gwt.core.client.JavaScriptObject;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
@@ -84,6 +81,14 @@ public class GWTChatSocketServlet extends SocketIOServlet {
                     Collections.singletonMap("announcement", sessionId + " disconnected")));
         }
 
+
+        public void onMessage(String strKey, String message) {
+        	logger.info("Server.onMessage: reflected call !! "+strKey+","+message);
+        	if(strKey.equals("message")){
+        		onMessage(1, message);
+        	}
+        }
+        
         @Override
         public void onMessage(int messageType, String message) {
         	logger.info("Server.onMessage: "+Integer.toString(messageType)+",'"+message+"'");
