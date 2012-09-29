@@ -37,7 +37,7 @@ public class GWTSocketIOConnectionFactory implements SocketIOConnection.Factory 
 	 * @return
 	 */
 	public SocketIOConnection create(SocketIOConnectionListener listener,
-		String host, short port) {
-		return new GWTSocketIOConnectionImpl(listener, host, port);
+		String host, short port, String[] aryKeys) {
+		return new GWTSocketIOConnectionImpl(listener, host, port, aryKeys);
 	}
 }

@@ -31,17 +31,23 @@ import com.glines.socketio.common.DisconnectReason;
 import com.glines.socketio.common.SocketIOException;
 import com.glines.socketio.server.SocketIOFrame;
 import com.google.gwt.core.client.JavaScriptObject;
+import com.google.gwt.core.client.JsArrayString;
 
 public class GWTSocketIOConnectionImpl implements SocketIOConnection {
 	private static final class SocketIOImpl extends JavaScriptObject {
-		public static native SocketIOImpl create(GWTSocketIOConnectionImpl impl, String host, String port) /*-{
+		public static native SocketIOImpl create(GWTSocketIOConnectionImpl impl, String host, String port, JsArrayString aryKeys) /*-{
 			var socket = $wnd.io.connect('http://'+host+':'+port,{rememberTransport: false, transports:["websocket"]});
 			socket.on('connect', $entry(function() {
       			impl.@com.glines.socketio.client.gwt.GWTSocketIOConnectionImpl::onConnect()();
     		}));
-			socket.on('message', $entry(function(msg) {
-				impl.@com.glines.socketio.client.gwt.GWTSocketIOConnectionImpl::onMessage(ILjava/lang/String;)(1, $wnd.io.JSON.stringify(msg));
-    		}));
+			aryKeys.forEach(
+				function addSocketON(strKey) {
+					socket.on(strKey, $entry(function(msg) {
+						//impl.@com.glines.socketio.client.gwt.GWTSocketIOConnectionImpl::onMessage(ILjava/lang/String;)(1, $wnd.io.JSON.stringify(msg));
+						impl.@com.glines.socketio.client.gwt.GWTSocketIOConnectionImpl::onMessage(Ljava/lang/String;Ljava/lang/String;)(strKey, $wnd.io.JSON.stringify(msg));
+		    		}));
+		    	}
+			);
 			socket.on('disconnect', $entry(function(dr, message) {
       			impl.@com.glines.socketio.client.gwt.GWTSocketIOConnectionImpl::onDisconnect(ILjava/lang/String;)(dr, message);
     		}));
@@ -71,10 +77,12 @@ public class GWTSocketIOConnectionImpl implements SocketIOConnection {
 	    	// the messageType is 0 or 1 and isn't same as the FrameType (3=Text,4=Json,etc)
 	    	if(messageType == 0){
 	    		// we can send a raw string with using transport.send().
-				this.socket.transport.send("3:1::"+data);
+				//this.socket.transport.send("3:1::"+data);
+				this.send(data);
 			}else{
 				// java->javascript converting is done via string. so we need eval that.
-				this.json.send(eval("("+data+")"));
+				this.socket.transport.send("4:1::"+data);
+				//this.json.send(eval("("+data+")"));
 			}
 	    }-*/;
 	}
@@ -82,10 +90,11 @@ public class GWTSocketIOConnectionImpl implements SocketIOConnection {
 	private final SocketIOConnectionListener listener;
 	private final String host;
 	private final String port;
+	private final String[] aryKeys;
 	private SocketIOImpl socket = null;
 
 	GWTSocketIOConnectionImpl(SocketIOConnectionListener listener,
-			String host, short port) {
+			String host, short port, String[] aryKeys) {
 		this.listener = listener;
 		if (host.length() > 0) {
 			this.host = host;
@@ -97,14 +106,23 @@ public class GWTSocketIOConnectionImpl implements SocketIOConnection {
 		} else {
 			this.port = "8080";
 		}
+		if (aryKeys != null) {
+			this.aryKeys = aryKeys;
+		} else {
+			this.aryKeys = new String[]{"message"};
+		}
+		
 	}
 
 	@Override
 	public void connect() {
 		if (socket == null) {
-			socket = SocketIOImpl.create(this, host, port);
+			JsArrayString jsStrings = (JsArrayString)JsArrayString.createArray();
+			for (String s : aryKeys) {
+				  jsStrings.push(s);
+			}
+			socket = SocketIOImpl.create(this, host, port, jsStrings);
 		}
-
 		if (ConnectionState.CLOSED != getConnectionState()) {
 			throw new IllegalStateException("Connection isn't closed!");
 		}
@@ -138,14 +156,19 @@ public class GWTSocketIOConnectionImpl implements SocketIOConnection {
 
 	@Override
 	public void sendMessage(String message) throws SocketIOException {
-		sendMessage(SocketIOFrame.TEXT_MESSAGE_TYPE, message);
+		//sendMessage(SocketIOFrame.TEXT_MESSAGE_TYPE, message);
+		emitMessage("message", message);
 	}
 
 	@Override
 	public void emitMessage(String strKey, String message) throws SocketIOException {
 		// This is for emitting message.
 		// TODO maybe this message should be changed to JSONObject or something.
-		sendMessage(SocketIOFrame.JSON_MESSAGE_TYPE, "{\""+strKey+"\":\""+message+"\"}");
+		if(message.startsWith("\\{") || message.startsWith("\\[")){
+			sendMessage(SocketIOFrame.JSON_MESSAGE_TYPE, "{\""+strKey+"\":"+message+"}");
+		}else{
+			sendMessage(SocketIOFrame.JSON_MESSAGE_TYPE, "{\""+strKey+"\":\""+message+"\"}");
+		}
 	}
 
 	@Override
@@ -166,6 +189,14 @@ public class GWTSocketIOConnectionImpl implements SocketIOConnection {
 	private void onDisconnect(int dr, String errorMessage) {
 		DisconnectReason reason = DisconnectReason.fromInt(dr);
 		listener.onDisconnect(reason, errorMessage);
+	}
+
+	@SuppressWarnings("unused")
+	private void onMessage(String strKey, String message) {
+		// i don't know why this
+		//message = message.replaceAll("^\\{\""+strKey+"\":", "");
+		//message = message.replaceAll("\\}$", "");
+		listener.onMessage(strKey, message);
 	}
 
 	@SuppressWarnings("unused")

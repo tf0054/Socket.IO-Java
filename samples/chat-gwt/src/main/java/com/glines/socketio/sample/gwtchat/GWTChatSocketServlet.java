@@ -34,9 +34,6 @@ import com.google.gson.Gson;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.util.Collections;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -57,19 +54,8 @@ public class GWTChatSocketServlet extends SocketIOServlet {
         public void onConnect(SocketIOOutbound outbound) {
             this.outbound = outbound;
             connections.offer(this);
-            try {
-                outbound.sendMessage(SocketIOFrame.JSON_MESSAGE_TYPE, new Gson().toJson(
-                        Collections.singletonMap("welcome", "Welcome to GWT Chat!")));
-            } catch (SocketIOException e) {
-				// http://en.wikibooks.org/wiki/Java_Programming/Stack_trace
-				StringWriter outError = new StringWriter();
-				PrintWriter errorWriter = new PrintWriter(outError);
-				e.printStackTrace(errorWriter);
-				logger.info("onConeect/Client: " + e + "\n" + outError.toString());
-				outbound.disconnect();
-            }
-            broadcast(SocketIOFrame.JSON_MESSAGE_TYPE, new Gson().toJson(
-                    Collections.singletonMap("announcement", sessionId + " connected")));
+			emit("welcome", "Welcome to GWT Chat!");
+            broadcast("announcement", sessionId + " connected");
         }
 
         @Override
@@ -77,18 +63,18 @@ public class GWTChatSocketServlet extends SocketIOServlet {
         	
             this.outbound = null;
             connections.remove(this);
-            broadcast(SocketIOFrame.JSON_MESSAGE_TYPE, new Gson().toJson(
-                    Collections.singletonMap("announcement", sessionId + " disconnected")));
+            broadcast("announcement", sessionId + " disconnected");
         }
 
-
+        // v0.7- style - always used.
         public void onMessage(String strKey, String message) {
-        	logger.info("Server.onMessage: reflected call !! "+strKey+","+message);
         	if(strKey.equals("message")){
         		onMessage(1, message);
         	}
         }
         
+        // v0.6 style
+        // TODO we should merge this with above one.
         @Override
         public void onMessage(int messageType, String message) {
         	logger.info("Server.onMessage: "+Integer.toString(messageType)+",'"+message+"'");
@@ -107,19 +93,9 @@ public class GWTChatSocketServlet extends SocketIOServlet {
 	                } catch (InterruptedException e) {
 	                    // Ignore
 	                }
-	                try {
-	                    outbound.sendMessage(SocketIOFrame.JSON_MESSAGE_TYPE, new Gson().toJson(
-	                            Collections.singletonMap("message", "Slept for " + sleepTime + " seconds.")));
-	                } catch (SocketIOException e) {
-	                    outbound.disconnect();
-	                }
+                	emit("message", "Slept for " + sleepTime + " seconds.");
                 }else{
-	                try {
-	                    outbound.sendMessage(SocketIOFrame.JSON_MESSAGE_TYPE, new Gson().toJson(
-	                            Collections.singletonMap("message", "please input like '/sleep 5'.")));
-	                } catch (SocketIOException e) {
-	                    outbound.disconnect();
-	                }
+                	emit("message", "please input like '/sleep 5'.");
                 }
             } else {
             	/*
@@ -127,26 +103,36 @@ public class GWTChatSocketServlet extends SocketIOServlet {
             	JSONObject objNewMsg = JSONParser.parseLenient("{\"message\":[\""+sessionId.toString()+"\",\""+objOldMsg.get("message")+"\"]}").isObject();
             	broadcast(messageType, objNewMsg.toString());
             	*/
+            	
+            	// add sessionId (client id) on message.
             	// TODO: change this code to general one..
-            	message = message.replaceFirst(":\"", ":[\""+sessionId.toString()+"\",\"");
-            	message = message.replaceFirst("\"}", "\"]}");
-            	broadcast(messageType, message);
+            	message = "[\""+sessionId.toString()+"\",\""+message+"\"]";
+            	broadcast("message", message);
             }
         }
 
-        private void broadcast(int messageType, String message) {
+        // TODO this function should be treated similer with emitMessage.
+        private void broadcast(String strKey, String message) {
             for (GWTChatConnection c : connections) {
                 if (c != this) {
                     try {
-                        c.outbound.sendMessage(messageType, message);
+                    	c.outbound.emitMessage(strKey, message);
                     } catch (IOException e) {
                         c.outbound.disconnect();
                     }
                 }
             }
         }
+        
+        private void emit(String strKey, String message) {
+            try {
+            	outbound.emitMessage(strKey, message);
+            } catch (IOException e) {
+                outbound.disconnect();
+            }
+        }
     }
-
+    
     @Override
     protected SocketIOInbound doSocketIOConnect(HttpServletRequest request) {
         return new GWTChatConnection();

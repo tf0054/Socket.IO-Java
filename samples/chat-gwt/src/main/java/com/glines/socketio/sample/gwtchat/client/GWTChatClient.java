@@ -32,6 +32,7 @@ import com.glines.socketio.common.SocketIOException;
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.user.client.DOM;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.TextBox;
@@ -84,12 +85,12 @@ public class GWTChatClient implements EntryPoint, SocketIOConnectionListener {
 		btnSubmit.addClickHandler(new ClickHandler() {
 			public void onClick(ClickEvent event) {
 				onSubmit();
-			}
+			} 
 		});
 		btnSubmit.setHeight("30");
 		submitPanel.add(btnSubmit);
 		
-		socket = GWTSocketIOConnectionFactory.INSTANCE.create(this, "", (short)0);
+		socket = GWTSocketIOConnectionFactory.INSTANCE.create(this, "", (short)0, null);
 		socket.connect();
 	}
 	
@@ -102,7 +103,8 @@ public class GWTChatClient implements EntryPoint, SocketIOConnectionListener {
 	
 	private void onSubmit() {
 		String text = textBox.getText();
-		
+		if(text.length() == 0)
+			return;
 		if (text.equals("/lclose")) {
 			addLine("<em>closing...</em>");
 			socket.close();
@@ -113,21 +115,18 @@ public class GWTChatClient implements EntryPoint, SocketIOConnectionListener {
 			addLine("<b>you:</b> " + text);
 			textBox.setText("");
 			try {
+				//socket.sendMessage(text);
 				socket.emitMessage("message", text);
 			} catch (SocketIOException e) {
 				// Ignore. This wwon't happen in the GWT version.
 			}
-		} 
+		}
 	}
 
 	@Override
 	public void onConnect() {
 		htmlPanel.setHTML("");
-		try {
-			socket.sendMessage("client: hello");
-		} catch (SocketIOException e) {
-			// Ignore. This wwon't happen in the GWT version.
-		}
+		addLine("<b>Connected</b>");
 		submitPanel.setVisible(true);
 	}
 
@@ -141,7 +140,7 @@ public class GWTChatClient implements EntryPoint, SocketIOConnectionListener {
 		}
 	} 
 
-	private void onMessage(JSONObject obj) {
+	private void onMessage(JSONObject obj) { 
 		if (obj.containsKey("welcome")) {
 			JSONString str = obj.get("welcome").isString();
 			if (str != null) {
@@ -168,16 +167,35 @@ public class GWTChatClient implements EntryPoint, SocketIOConnectionListener {
 					addLine("<b>Server:</b> " + str.stringValue());
 				}
 			}
+		} else {
+			Window.alert("unrecognized message: "+obj.toString());
 		}
 	}
 	
+	public void onMessage(String strKey, String message) {
+		//Window.alert("key: "+strKey+"\nmsg: "+message);
+		if (strKey.equals("message")) {
+			JSONObject obj = JSONParser.parseStrict(message).isObject();
+			if (obj != null) {
+				onMessage(obj);
+			} else {
+				Window.alert("onMessage received null.");
+			}
+		} else {
+			Window.alert("onMessage received a message without 'message' key: ("
+					+ strKey + "," + message + ")");
+		}
+	}
+
 	@Override
 	public void onMessage(int messageType, String message) {
-		if (messageType == 1) {
+		if (messageType == 1) { 
 			JSONObject obj = JSONParser.parseStrict(message).isObject();
 			if (obj != null) {
 				onMessage(obj);
 			}
+		} else {
+			Window.alert("messageType = "+messageType+", message = "+message);
 		}
 	}
 }

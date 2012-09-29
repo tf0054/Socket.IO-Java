@@ -32,5 +32,6 @@ import com.glines.socketio.common.DisconnectReason;
 public interface SocketIOConnectionListener {
     void onConnect();
     void onDisconnect(DisconnectReason reason, String errorMessage);
+    void onMessage(String strKey, String message);
     void onMessage(int messageType, String message);
 }

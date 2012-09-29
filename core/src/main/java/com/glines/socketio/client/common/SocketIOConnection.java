@@ -31,7 +31,7 @@ import com.glines.socketio.common.SocketIOException;
 public interface SocketIOConnection {
 	interface Factory {
 		SocketIOConnection create(SocketIOConnectionListener listener,
-				String host, short port);
+				String host, short port, String[] aryKeys);
 	}
 
     /**
