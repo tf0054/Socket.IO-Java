@@ -47,6 +47,7 @@ import com.google.gwt.json.client.JSONArray;
 import com.google.gwt.json.client.JSONObject;
 import com.google.gwt.json.client.JSONParser;
 import com.google.gwt.json.client.JSONString;
+import com.google.gwt.json.client.JSONValue;
 
 public class GWTChatClient implements EntryPoint, SocketIOConnectionListener {
 
@@ -90,7 +91,8 @@ public class GWTChatClient implements EntryPoint, SocketIOConnectionListener {
 		btnSubmit.setHeight("30");
 		submitPanel.add(btnSubmit);
 		
-		socket = GWTSocketIOConnectionFactory.INSTANCE.create(this, "", (short)0, null);
+		socket = GWTSocketIOConnectionFactory.INSTANCE.create(this, "", (short)0, 
+				new String[] {"message", "welcome", "announcement"});
 		socket.connect();
 	}
 	
@@ -138,62 +140,46 @@ public class GWTChatClient implements EntryPoint, SocketIOConnectionListener {
 		} else {
 			addLine("<b>Disconnected["+reason+"]</b>");
 		}
-	} 
-
-	private void onMessage(JSONObject obj) { 
-		if (obj.containsKey("welcome")) {
-			JSONString str = obj.get("welcome").isString();
-			if (str != null) {
-				addLine("<em><b>" + str.stringValue() + "</b></em>");
-			}
-		} else if (obj.containsKey("announcement")) {
-			JSONString str = obj.get("announcement").isString();
-			if (str != null) {
-				addLine("<em>" + str.stringValue() + "</em>");
-			}
-		} else if (obj.containsKey("message")) {
-			JSONArray arr = obj.get("message").isArray();
-			if (arr != null){
-				if(arr.size() >= 2) {
-					JSONString id = arr.get(0).isString();
-					JSONString msg = arr.get(1).isString(); 
-					if (id != null && msg != null) {
-						addLine("<b>" + id.stringValue() + ":</b> " + msg.stringValue());
-					}
-				}
-			}else{
-				JSONString str = obj.get("message").isString();
-				if (str != null) {
-					addLine("<b>Server:</b> " + str.stringValue());
-				}
-			}
-		} else {
-			Window.alert("unrecognized message: "+obj.toString());
-		}
 	}
 	
 	public void onMessage(String strKey, String message) {
-		//Window.alert("key: "+strKey+"\nmsg: "+message);
-		if (strKey.equals("message")) {
-			JSONObject obj = JSONParser.parseStrict(message).isObject();
-			if (obj != null) {
-				onMessage(obj);
-			} else {
-				Window.alert("onMessage received null.");
+			JSONValue obj = null;
+			if(message.startsWith("{") || message.startsWith("[")){
+				obj = JSONParser.parseStrict(message);
+			}else{
+				message = message.replaceAll("^\"", "").replaceAll("\"$", "");
 			}
-		} else {
-			Window.alert("onMessage received a message without 'message' key: ("
-					+ strKey + "," + message + ")");
-		}
+			
+			if (strKey.equals("welcome")) {
+					addLine("<em><b>" + message + "</b></em>");
+			} else if (strKey.equals("announcement")) {
+					addLine("<em>" + message + "</em>");
+			} else if (strKey.equals("message")) {
+				if(obj == null){
+					addLine("<b>Server:</b> " + message);
+				}else{
+					JSONArray arr = obj.isArray();
+					if (arr != null){
+						if(arr.size() >= 2) {
+							JSONString id = arr.get(0).isString();
+							JSONString msg = arr.get(1).isString(); 
+							if (id != null && msg != null) {
+								addLine("<b>" + id.stringValue() + ":</b> " + msg.stringValue());
+							}
+						}
+					} else {
+						Window.alert("unsupported json was cought: "+obj.toString());
+					}
+				}
+			} else {
+				Window.alert("unrecognized message: "+obj.toString());
+			}
 	}
 
 	@Override
 	public void onMessage(int messageType, String message) {
 		if (messageType == 1) { 
-			JSONObject obj = JSONParser.parseStrict(message).isObject();
-			if (obj != null) {
-				onMessage(obj);
-			}
+				onMessage("message",message);
 		} else {
 			Window.alert("messageType = "+messageType+", message = "+message);
 		}

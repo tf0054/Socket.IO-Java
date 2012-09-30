@@ -130,9 +130,11 @@ public final class JettyWebSocketTransportHandler extends AbstractTransportHandl
     @Override
     public void emitMessage(String strKey, String message) throws SocketIOException {
 		if(message.startsWith("{") || message.startsWith("[")){
-			sendMessage(SocketIOFrame.JSON_MESSAGE_TYPE, "{\""+strKey+"\":"+message+"}");
+			sendMessage(SocketIOFrame.JSON_MESSAGE_TYPE,
+					"{\"name\":\""+strKey+"\",\"args\":["+message+"]}");
 		}else{
-			sendMessage(SocketIOFrame.JSON_MESSAGE_TYPE, "{\""+strKey+"\":\""+message+"\"}");	
+			sendMessage(SocketIOFrame.JSON_MESSAGE_TYPE,
+					"{\"name\":\""+strKey+"\",\"args\":[\""+message+"\"]}");	
 		}
     }
 
@@ -143,7 +145,7 @@ public final class JettyWebSocketTransportHandler extends AbstractTransportHandl
             sendMessage(new SocketIOFrame(
                         messageType == SocketIOFrame.TEXT_MESSAGE_TYPE ?
                                 SocketIOFrame.FrameType.MESSAGE :
-                                SocketIOFrame.FrameType.JSON_MESSAGE,
+                                SocketIOFrame.FrameType.EVENT,
                         messageType, message));
         } else {
             throw new SocketIOClosedException();

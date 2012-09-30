@@ -63,7 +63,7 @@ public class GWTChatSocketServlet extends SocketIOServlet {
         	
             this.outbound = null;
             connections.remove(this);
-            broadcast("announcement", sessionId + " disconnected");
+            broadcast("announcement", sessionId + " disconnected ("+reason.toString()+","+errorMessage+")");
         }
 
         // v0.7- style - always used.
