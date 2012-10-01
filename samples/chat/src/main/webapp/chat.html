@@ -40,15 +40,11 @@
           document.getElementById('chat').scrollTop = 1000000;
       }
       function message(obj){
-        if ('welcome' in obj) addLine('<em>' + esc(obj.welcome) + '</em>');
-        else if ('announcement' in obj) addLine('<em>' + esc(obj.announcement) + '</em>');
-        else if ('message' in obj){
-        	if(isArray(obj.message)){
-        		addLine('<b>' + esc(obj.message[0]) + ':</b> ' + esc(obj.message[1]));
+        	if(isArray(obj)){
+        		addLine('<b>' + esc(obj[0]) + ':</b> ' + esc(obj[1]));
         	}else{
-        		addLine('<b>Server:</b> ' + esc(obj.message));
+        		addLine('<b>Server:</b> ' + esc(obj));
         	}
-        }
       }
       
       function isArray(a){
@@ -64,9 +60,9 @@
     	      	addLine('<em>disconnecting...</em>');
             	socket.disconnect();
         } else {
-            socket.send(val);
+            socket.emit("message",val);
         }
-        message({ message: ['you', val] });
+        message(eval("(['you', '"+val+"'])"));
         document.getElementById('text').value = '';
       }
       
@@ -95,6 +91,12 @@
       }
       
       var socket = io.connect('http://localhost:8080',{rememberTransport: false, transports:["websocket"]});
+	  socket.on('welcome', function(msg){
+ 	 	  addLine('<em><b>' + esc(msg) + '</b></em>');
+      });
+	  socket.on('announcement', function(msg){
+ 		  addLine('<em>' + esc(msg) + '</em>');
+      });
  	  socket.on('message', function(msg){
 			message(msg);
       });

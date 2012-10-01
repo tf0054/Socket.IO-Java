@@ -61,57 +61,44 @@ public class ChatSocketServlet extends SocketIOServlet {
         public void onConnect(SocketIOOutbound outbound) {
             this.outbound = outbound;
             connections.offer(this);
-            try {
-                outbound.sendMessage(SocketIOFrame.JSON_MESSAGE_TYPE, new Gson().toJson(
-                        Collections.singletonMap("welcome", "Welcome to Socket.IO Chat!")));
-            } catch (SocketIOException e) {
-                outbound.disconnect();
-            }
-            broadcast(SocketIOFrame.JSON_MESSAGE_TYPE, new Gson().toJson(
-                    Collections.singletonMap("announcement", sessionId + " connected")));
+            emit("welcome", "Welcome to Socket.IO Chat!");
+            broadcast("announcement", sessionId + " connected");
         }
 
         @Override
         public void onDisconnect(DisconnectReason reason, String errorMessage) {
             this.outbound = null;
             connections.remove(this);
-            broadcast(SocketIOFrame.JSON_MESSAGE_TYPE, new Gson().toJson(
-                    Collections.singletonMap("announcement", sessionId + " disconnected")));
+            broadcast("announcement", sessionId + " disconnected");
         }
 
         @Override
-        public void onMessage(int messageType, String message) {
-            if (message.equals("/rclose")) {
-                outbound.close();
-            } else if (message.equals("/rdisconnect")) {
-                outbound.disconnect();
-            } else if (message.startsWith("/sleep")) {
-                int sleepTime = 1;
-                String parts[] = message.split("\\s+");
-                if (parts.length == 2) {
-                    sleepTime = Integer.parseInt(parts[1]);
-                }
-                try {
-                    Thread.sleep(sleepTime * 1000);
-                } catch (InterruptedException e) {
-                    // Ignore
-                }
-                try {
-                    outbound.sendMessage(SocketIOFrame.JSON_MESSAGE_TYPE, new Gson().toJson(
-                            Collections.singletonMap("message", "Slept for " + sleepTime + " seconds.")));
-                } catch (SocketIOException e) {
-                    outbound.disconnect();
-                }
-            } else if (message.startsWith("/burst")) {
-                int burstNum = 10;
-                String parts[] = message.split("\\s+");
-                if (parts.length == 2) {
-                    burstNum = Integer.parseInt(parts[1]);
-                }
-                try {
+		public void onMessage(String strKey, String message) {
+        	if(strKey.equals("message")){
+	            if (message.equals("/rclose")) {
+	                outbound.close();
+	            } else if (message.equals("/rdisconnect")) {
+	                outbound.disconnect();
+	            } else if (message.startsWith("/sleep")) {
+	                int sleepTime = 1;
+	                String parts[] = message.split("\\s+");
+	                if (parts.length == 2) {
+	                    sleepTime = Integer.parseInt(parts[1]);
+	                }
+	                try {
+	                    Thread.sleep(sleepTime * 1000);
+	                } catch (InterruptedException e) {
+	                    // Ignore
+	                }
+                    emit("message", "Slept for " + sleepTime + " seconds.");
+	            } else if (message.startsWith("/burst")) {
+	                int burstNum = 10;
+	                String parts[] = message.split("\\s+");
+	                if (parts.length == 2) {
+	                    burstNum = Integer.parseInt(parts[1]);
+	                }
                     for (int i = 0; i < burstNum; i++) {
-                        outbound.sendMessage(SocketIOFrame.JSON_MESSAGE_TYPE, new Gson().toJson(
-                                Collections.singletonMap("message", new String[]{"Server", "Hi " + i +
+                        emit("message", "Hi " + i + " " +
                                         "0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF" +
                                         "0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF" +
                                         "0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF" +
@@ -120,37 +107,43 @@ public class ChatSocketServlet extends SocketIOServlet {
                                         "0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF" +
                                         "0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF" +
                                         "0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF"
-                                })));
-//						outbound.sendMessage(SocketIOFrame.JSON_MESSAGE_TYPE, JSON.toString(
-//								Collections.singletonMap("say","Hi " + i)));
+                            );
                         try {
                             Thread.sleep(250);
-                        } catch (InterruptedException e) {
-                            // Do nothing
+                        } catch (Exception e) {
+                            e.printStackTrace();
                         }
                     }
-                } catch (Exception e) {
-//				} catch (SocketIOException e) {
-//					outbound.disconnect();
-                }
-            } else {
-                broadcast(SocketIOFrame.JSON_MESSAGE_TYPE, new Gson().toJson(
-                        Collections.singletonMap("message",
-                                new String[]{sessionId.toString(), (String) message})));
-            }
+	            } else {
+	                broadcast(strKey, "[\""+sessionId+"\",\""+message+"\"]");
+	            }
+        	}
         }
 
-        private void broadcast(int messageType, String message) {
+        private void broadcast(String strKey, String message) {
             for (ChatConnection c : connections) {
                 if (c != this) {
                     try {
-                        c.outbound.sendMessage(messageType, message);
+                    	c.outbound.emitMessage(strKey, message);
                     } catch (IOException e) {
                         c.outbound.disconnect();
                     }
                 }
             }
         }
+        
+        private void emit(String strKey, String message) {
+            try {
+            	outbound.emitMessage(strKey, message);
+            } catch (IOException e) {
+                outbound.disconnect();
+            }
+        }
+        
+		@Override
+		public String[] setEventnames() {
+        	return new String[]{"message","announcement","welcome"};
+		}
     }
 
     @Override
