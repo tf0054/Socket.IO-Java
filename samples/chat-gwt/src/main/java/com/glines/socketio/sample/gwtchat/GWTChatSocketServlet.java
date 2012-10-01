@@ -51,6 +51,11 @@ public class GWTChatSocketServlet extends SocketIOServlet {
         private Integer sessionId = ids.getAndIncrement();
 
         @Override
+        public String[] setEventnames() {
+        	return new String[]{"message"};
+        }
+
+        @Override
         public void onConnect(SocketIOOutbound outbound) {
             this.outbound = outbound;
             connections.offer(this);
@@ -69,46 +74,39 @@ public class GWTChatSocketServlet extends SocketIOServlet {
         // v0.7- style - always used.
         public void onMessage(String strKey, String message) {
         	if(strKey.equals("message")){
-        		onMessage(1, message);
-        	}
-        }
-        
-        // v0.6 style
-        // TODO we should merge this with above one.
-        @Override
-        public void onMessage(int messageType, String message) {
-        	logger.info("Server.onMessage: "+Integer.toString(messageType)+",'"+message+"'");
-        	
-            if (message.equals("/rclose")) {
-                outbound.close();
-            } else if (message.equals("/rdisconnect")) {
-                outbound.disconnect();
-            } else if (message.startsWith("/sleep")) {
-                int sleepTime = 1;
-                String parts[] = message.split("\\s+");
-                if (parts.length == 2) {
-                    sleepTime = Integer.parseInt(parts[1]);
-	                try {
-	                    Thread.sleep(sleepTime * 1000);
-	                } catch (InterruptedException e) {
-	                    // Ignore
+	        	logger.info("Server.onMessage: '"+strKey+"','"+message+"'");
+	        	
+	            if (message.equals("/rclose")) {
+	                outbound.close();
+	            } else if (message.equals("/rdisconnect")) {
+	                outbound.disconnect();
+	            } else if (message.startsWith("/sleep")) {
+	                int sleepTime = 1;
+	                String parts[] = message.split("\\s+");
+	                if (parts.length == 2) {
+	                    sleepTime = Integer.parseInt(parts[1]);
+		                try {
+		                    Thread.sleep(sleepTime * 1000);
+		                } catch (InterruptedException e) {
+		                    // Ignore
+		                }
+	                	emit("message", "Slept for " + sleepTime + " seconds.");
+	                }else{
+	                	emit("message", "please input like '/sleep 5'.");
 	                }
-                	emit("message", "Slept for " + sleepTime + " seconds.");
-                }else{
-                	emit("message", "please input like '/sleep 5'.");
-                }
-            } else {
-            	/*
-            	JSONObject objOldMsg = JSONParser.parseLenient(message).isObject();
-            	JSONObject objNewMsg = JSONParser.parseLenient("{\"message\":[\""+sessionId.toString()+"\",\""+objOldMsg.get("message")+"\"]}").isObject();
-            	broadcast(messageType, objNewMsg.toString());
-            	*/
-            	
-            	// add sessionId (client id) on message.
-            	// TODO: change this code to general one..
-            	message = "[\""+sessionId.toString()+"\",\""+message+"\"]";
-            	broadcast("message", message);
-            }
+	            } else {
+	            	/*
+	            	JSONObject objOldMsg = JSONParser.parseLenient(message).isObject();
+	            	JSONObject objNewMsg = JSONParser.parseLenient("{\"message\":[\""+sessionId.toString()+"\",\""+objOldMsg.get("message")+"\"]}").isObject();
+	            	broadcast(messageType, objNewMsg.toString());
+	            	*/
+	            	
+	            	// add sessionId (client id) on message.
+	            	// TODO: change this code to general one..
+	            	message = "[\""+sessionId.toString()+"\",\""+message+"\"]";
+	            	broadcast("message", message);
+	            }
+        	}
         }
 
         // TODO this function should be treated similer with emitMessage.

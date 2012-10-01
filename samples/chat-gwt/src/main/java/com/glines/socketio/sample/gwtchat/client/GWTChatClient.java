@@ -117,7 +117,6 @@ public class GWTChatClient implements EntryPoint, SocketIOConnectionListener {
 			addLine("<b>you:</b> " + text);
 			textBox.setText("");
 			try {
-				//socket.sendMessage(text);
 				socket.emitMessage("message", text);
 			} catch (SocketIOException e) {
 				// Ignore. This wwon't happen in the GWT version.
@@ -143,37 +142,38 @@ public class GWTChatClient implements EntryPoint, SocketIOConnectionListener {
 	}
 	
 	public void onMessage(String strKey, String message) {
-			JSONValue obj = null;
-			if(message.startsWith("{") || message.startsWith("[")){
-				obj = JSONParser.parseStrict(message);
+		JSONValue obj = null;
+
+		if(message.startsWith("{") || message.startsWith("[")){
+			obj = JSONParser.parseStrict(message);
+		}else{
+			message = message.replaceAll("^\"", "").replaceAll("\"$", "");
+		}
+		
+		if (strKey.equals("welcome")) {
+				addLine("<em><b>" + message + "</b></em>");
+		} else if (strKey.equals("announcement")) {
+				addLine("<em>" + message + "</em>");
+		} else if (strKey.equals("message")) {
+			if(obj == null){
+				addLine("<b>Server:</b> " + message);
 			}else{
-				message = message.replaceAll("^\"", "").replaceAll("\"$", "");
-			}
-			
-			if (strKey.equals("welcome")) {
-					addLine("<em><b>" + message + "</b></em>");
-			} else if (strKey.equals("announcement")) {
-					addLine("<em>" + message + "</em>");
-			} else if (strKey.equals("message")) {
-				if(obj == null){
-					addLine("<b>Server:</b> " + message);
-				}else{
-					JSONArray arr = obj.isArray();
-					if (arr != null){
-						if(arr.size() >= 2) {
-							JSONString id = arr.get(0).isString();
-							JSONString msg = arr.get(1).isString(); 
-							if (id != null && msg != null) {
-								addLine("<b>" + id.stringValue() + ":</b> " + msg.stringValue());
-							}
+				JSONArray arr = obj.isArray();
+				if (arr != null){
+					if(arr.size() >= 2) {
+						JSONString id = arr.get(0).isString();
+						JSONString msg = arr.get(1).isString(); 
+						if (id != null && msg != null) {
+							addLine("<b>" + id.stringValue() + ":</b> " + msg.stringValue());
 						}
-					} else {
-						Window.alert("unsupported json was cought: "+obj.toString());
 					}
+				} else {
+					Window.alert("unsupported json: "+obj.toString());
 				}
-			} else {
-				Window.alert("unrecognized message: "+obj.toString());
 			}
+		} else {
+			Window.alert("unrecognized message: "+obj.toString());
+		}
 	}
 
 	@Override

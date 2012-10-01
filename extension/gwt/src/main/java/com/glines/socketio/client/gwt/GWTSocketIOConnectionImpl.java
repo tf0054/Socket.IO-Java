@@ -81,9 +81,12 @@ public class GWTSocketIOConnectionImpl implements SocketIOConnection {
 				this.send(data);
 			}else{
 				// java->javascript converting is done via string. so we need eval that.
-				this.socket.transport.send("4:1::"+data);
 				//this.json.send(eval("("+data+")"));
+				this.socket.transport.send("4:1::"+data);
 			}
+	    }-*/;
+	    public native void emit(String strKey, String data) /*-{
+			this.emit(strKey, data);
 	    }-*/;
 	}
 	
@@ -156,7 +159,6 @@ public class GWTSocketIOConnectionImpl implements SocketIOConnection {
 
 	@Override
 	public void sendMessage(String message) throws SocketIOException {
-		//sendMessage(SocketIOFrame.TEXT_MESSAGE_TYPE, message);
 		emitMessage("message", message);
 	}
 
@@ -167,7 +169,11 @@ public class GWTSocketIOConnectionImpl implements SocketIOConnection {
 		if(message.startsWith("\\{") || message.startsWith("\\[")){
 			sendMessage(SocketIOFrame.JSON_MESSAGE_TYPE, "{\""+strKey+"\":"+message+"}");
 		}else{
-			sendMessage(SocketIOFrame.JSON_MESSAGE_TYPE, "{\""+strKey+"\":\""+message+"\"}");
+			if (ConnectionState.CONNECTED != getConnectionState()) {
+				throw new IllegalStateException("Not connected");
+			}
+			socket.emit(strKey, message);
+
 		}
 	}
 
@@ -193,9 +199,6 @@ public class GWTSocketIOConnectionImpl implements SocketIOConnection {
 
 	@SuppressWarnings("unused")
 	private void onMessage(String strKey, String message) {
-		// i don't know why this
-		//message = message.replaceAll("^\\{\""+strKey+"\":", "");
-		//message = message.replaceAll("\\}$", "");
 		listener.onMessage(strKey, message);
 	}
 

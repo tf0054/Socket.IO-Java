@@ -51,5 +51,8 @@ public interface SocketIOInbound {
      * @param messageType
      * @param message
      */
-    void onMessage(int messageType, String message);
+    void onMessage(String strKey, String message);
+
+    //
+	String[] setEventnames();
 }
