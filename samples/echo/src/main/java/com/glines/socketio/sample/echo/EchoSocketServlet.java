@@ -50,13 +50,18 @@ public class EchoSocketServlet extends SocketIOServlet {
 			}
 
 		@Override
-		public void onMessage(int messageType, String message) {
-			try {
-				outbound.sendMessage(messageType, message);
-			} catch (IOException e) {
-				outbound.disconnect();
-			}
-		}
+		public void onMessage(String strKey, String message) {
+            try {
+            	outbound.sendMessage(message);
+            } catch (IOException e) {
+                outbound.disconnect();
+            }
+        }
+
+        @Override
+        public String[] setEventnames() {
+        	return new String[]{"message"};
+        }
 	}
 
 	@Override

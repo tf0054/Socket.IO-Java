@@ -323,51 +323,73 @@ class DefaultSession implements SocketIOSession {
     }
 
     @Override
-    public void onMessage(int frameType, String message) {
-        if (inbound != null) {
-        	if(frameType == SocketIOFrame.FrameType.MESSAGE.value()){
-        		//
-        	}else if(frameType == SocketIOFrame.FrameType.JSON_MESSAGE.value()){
-        		//
-        	}else if(frameType == SocketIOFrame.FrameType.EVENT.value()){
-	            try {
-	            	// try calling new-style method (all call will be treated as json).
-	            	// TODO get key like "message" with parsing message as json.
-	            	// TODO is it great if we have no onMessage declarations on interface?
-	            	//Pattern KEY_PATTERN = Pattern.compile("\\{\"([^\"]+)\":(.*)\\}");
-	            	Pattern KEY_PATTERN = Pattern.compile("\\{\"name\":\"([^\"]+)\",\"args\":\\[(.*)\\]\\}");
-	            	String strKey = "message";
-	            	try{
-	            		Matcher a = KEY_PATTERN.matcher(message);
-	            		if(a.find()) {
-	                		strKey = a.group(1);
-	                		message = a.group(2);
-	                		// for premitive value.
-	                		if(message.startsWith("\"")){
-	                			message = message.substring(1, message.length()-1);
-	                			// checking authed event-name
-	                			for(String b : inbound.setEventnames()){
-	                				if(strKey.equals(b))
-	                					inbound.onMessage(strKey, message);	                				
-	                			}
-	                		}
-	                	    if (LOGGER.isLoggable(Level.FINE))
-	                	        LOGGER.log(Level.FINE, "Session[" + sessionId + "]: matcher got ("+strKey+","+message+")");
-	                	 }else{
-	                 	    if (LOGGER.isLoggable(Level.FINE))
-	                	        LOGGER.log(Level.FINE, "Session[" + sessionId + "]: matcher cannot be matched ("+message+")");
-	                	 }
-	            	}catch (Exception e) {
-	            	    if (LOGGER.isLoggable(Level.FINE))
-	            	        LOGGER.log(Level.FINE, "Session[" + sessionId + "]: matcher got an exception ("+strKey+","+message+")");
-	            	} 
-	            } catch (Throwable e) {
-	                if (LOGGER.isLoggable(Level.WARNING))
-	                    LOGGER.log(Level.WARNING, "Session[" + sessionId + "]: Exception thrown by SocketIOInbound.onMessage()", e);
-	            }
-            }
-        }
-    }
+	public void onMessage(int frameType, String message) {
+		if (inbound != null) {
+			switch (frameType) {
+			case 3: // SocketIOFrame.FrameType.MESSAGE.value():
+			case 4: // SocketIOFrame.FrameType.JSON_MESSAGE.value():
+				if (LOGGER.isLoggable(Level.FINE))
+					LOGGER.log(Level.FINE, "Session[" + sessionId
+							+ "]: message header is \"3:\" (" + message + ")");
+				// i don't know how to send messages with "4:" header 
+				inbound.onMessage("message", message);
+				break;
+			case 5: // SocketIOFrame.FrameType.EVENT.value()
+				if (LOGGER.isLoggable(Level.FINE))
+					LOGGER.log(Level.FINE, "Session[" + sessionId
+							+ "]: message header is \"5:\" (" + message + ")");
+				try {
+					// try calling new-style method (all call will be treated as
+					// json).
+					// TODO get key like "message" with parsing message as json.
+					// TODO is it great if we have no onMessage declarations on
+					// interface?
+					Pattern KEY_PATTERN = Pattern
+							.compile("\\{\"name\":\"([^\"]+)\",\"args\":\\[(.*)\\]\\}");
+					String strKey = "message";
+					try {
+						Matcher a = KEY_PATTERN.matcher(message);
+						if (a.find()) {
+							strKey = a.group(1);
+							message = a.group(2);
+							// for premitive value.
+							if (message.startsWith("\"")) {
+								message = message.substring(1,
+										message.length() - 1);
+								// checking authed event-name
+								for (String b : inbound.setEventnames()) {
+									if (strKey.equals(b))
+										inbound.onMessage(strKey, message);
+								}
+							}
+							if (LOGGER.isLoggable(Level.FINE))
+								LOGGER.log(Level.FINE, "Session[" + sessionId
+										+ "]: matcher got (" + strKey + ","
+										+ message + ")");
+						} else {
+							if (LOGGER.isLoggable(Level.FINE))
+								LOGGER.log(Level.FINE, "Session[" + sessionId
+										+ "]: matcher cannot be matched ("
+										+ message + ")");
+						}
+					} catch (Exception e) {
+						if (LOGGER.isLoggable(Level.FINE))
+							LOGGER.log(Level.FINE, "Session[" + sessionId
+									+ "]: matcher got an exception (" + strKey
+									+ "," + message + ")");
+					}
+				} catch (Throwable e) {
+					if (LOGGER.isLoggable(Level.WARNING))
+						LOGGER.log(
+								Level.WARNING,
+								"Session["
+										+ sessionId
+										+ "]: Exception thrown by SocketIOInbound.onMessage()",
+								e);
+				}
+			}
+		}
+	}
 
     @Override
     public void onDisconnect(DisconnectReason reason) {

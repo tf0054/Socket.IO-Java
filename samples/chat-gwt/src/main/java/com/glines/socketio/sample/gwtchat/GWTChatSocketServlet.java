@@ -51,11 +51,6 @@ public class GWTChatSocketServlet extends SocketIOServlet {
         private Integer sessionId = ids.getAndIncrement();
 
         @Override
-        public String[] setEventnames() {
-        	return new String[]{"message"};
-        }
-
-        @Override
         public void onConnect(SocketIOOutbound outbound) {
             this.outbound = outbound;
             connections.offer(this);
@@ -129,6 +124,12 @@ public class GWTChatSocketServlet extends SocketIOServlet {
                 outbound.disconnect();
             }
         }
+        
+        @Override
+        public String[] setEventnames() {
+        	return new String[]{"message"};
+        }
+
     }
     
     @Override
