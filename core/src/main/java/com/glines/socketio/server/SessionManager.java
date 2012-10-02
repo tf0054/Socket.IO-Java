@@ -24,10 +24,12 @@
  */
 package com.glines.socketio.server;
 
+import java.util.LinkedHashMap;
+
 /**
 * @author Mathieu Carbou (mathieu.carbou@gmail.com)
 */
 public interface SessionManager {
-    SocketIOSession createSession(SocketIOInbound inbound, String sessionId);
+    SocketIOSession createSession(SocketIOInbound inbound, String sessionId, LinkedHashMap<String,String> objHandshake);
     SocketIOSession getSession(String sessionId);
 }

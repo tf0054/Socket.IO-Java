@@ -35,6 +35,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -106,6 +107,10 @@ public final class JettyWebSocketTransportHandler extends AbstractTransportHandl
         return getSession().getConnectionState();
     }
 
+    public LinkedHashMap<String,String> getHandshake(){
+    	return getSession().getHandshake();
+    }
+    
     @Override
     public void sendMessage(SocketIOFrame frame) throws SocketIOException {
         if (outbound.isOpen()) {

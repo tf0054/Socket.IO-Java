@@ -43,6 +43,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -449,4 +450,10 @@ public final class JettyContinuationTransportHandler extends AbstractTransportHa
     public void onConnect() {
         getSession().onConnect(this);
     }
+
+	@Override
+	public LinkedHashMap<String, String> getHandshake() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

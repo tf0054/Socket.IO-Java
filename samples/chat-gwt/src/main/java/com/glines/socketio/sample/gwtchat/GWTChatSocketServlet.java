@@ -34,7 +34,10 @@ import com.google.gson.Gson;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.Queue;
+import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
@@ -56,6 +59,17 @@ public class GWTChatSocketServlet extends SocketIOServlet {
             connections.offer(this);
 			emit("welcome", "Welcome to GWT Chat!");
             broadcast("announcement", sessionId + " connected");
+            
+            // getting handshake information example
+			String strKey = "";
+			LinkedHashMap<String, String> objHandshake = outbound.getHandshake();
+			Set<String> set = objHandshake.keySet();
+			for (Iterator<String> iter = set.iterator(); iter.hasNext();) {
+				strKey = (String) iter.next();
+				//if(strKey.startsWith("Cookie") || strKey.startsWith("address"))
+					logger.info("Server.handshake: '" + strKey + "','"
+							+ (String) objHandshake.get(strKey) + "'");
+			}
         }
 
         @Override

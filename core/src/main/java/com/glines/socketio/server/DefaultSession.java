@@ -28,6 +28,7 @@ import com.glines.socketio.common.ConnectionState;
 import com.glines.socketio.common.DisconnectReason;
 import com.glines.socketio.common.SocketIOException;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
@@ -51,6 +52,8 @@ class DefaultSession implements SocketIOSession {
     private final AtomicLong messageId = new AtomicLong(0);
     private final Map<String, Object> attributes = new ConcurrentHashMap<String, Object>();
 
+    private LinkedHashMap<String,String> objHandshake = new LinkedHashMap<String,String>();
+
     private SocketIOInbound inbound;
     private TransportHandler handler;
     private ConnectionState state = ConnectionState.CONNECTING;
@@ -61,10 +64,11 @@ class DefaultSession implements SocketIOSession {
     private boolean timedout;
     private String closeId;
     
-    DefaultSession(SocketIOSessionManager socketIOSessionManager, SocketIOInbound inbound, String sessionId) {
+    DefaultSession(SocketIOSessionManager socketIOSessionManager, SocketIOInbound inbound, String sessionId, LinkedHashMap<String,String> objHandshake) {
         this.socketIOSessionManager = socketIOSessionManager;
         this.inbound = inbound;
         this.sessionId = sessionId;
+        this.objHandshake = objHandshake;
         if (LOGGER.isLoggable(Level.FINE))
             LOGGER.log(Level.FINE, "DefaultSession was created.");
     }
@@ -83,7 +87,10 @@ class DefaultSession implements SocketIOSession {
     public String getSessionId() {
         return sessionId;
     }
-
+    
+    public LinkedHashMap<String,String> getHandshake() {
+        return objHandshake;
+    }
     @Override
     public ConnectionState getConnectionState() {
         return state;

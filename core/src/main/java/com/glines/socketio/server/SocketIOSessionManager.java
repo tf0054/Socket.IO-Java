@@ -24,6 +24,7 @@
  */
 package com.glines.socketio.server;
 
+import java.util.LinkedHashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Executors;
@@ -35,8 +36,8 @@ public final class SocketIOSessionManager implements SessionManager {
     final ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
 
     @Override
-    public SocketIOSession createSession(SocketIOInbound inbound, String sessionId) {
-        DefaultSession impl = new DefaultSession(this, inbound, sessionId);
+    public SocketIOSession createSession(SocketIOInbound inbound, String sessionId, LinkedHashMap<String,String> objHandshake) {
+        DefaultSession impl = new DefaultSession(this, inbound, sessionId, objHandshake);
         socketIOSessions.put(impl.getSessionId(), impl);
         return impl;
     }

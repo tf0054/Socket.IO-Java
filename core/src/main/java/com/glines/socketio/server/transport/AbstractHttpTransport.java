@@ -30,6 +30,8 @@ import com.glines.socketio.util.Web;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Enumeration;
+import java.util.LinkedHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -82,7 +84,13 @@ public abstract class AbstractHttpTransport extends AbstractTransport {
         if (inbound != null) {
             if (sessionId == null)
                 sessionId = request.getSession().getId().toString();
-            SocketIOSession session = sessionFactory.createSession(inbound, sessionId);
+			Enumeration<String> headerNames = request.getHeaderNames();
+			LinkedHashMap<String,String> objHandshake = new LinkedHashMap<String,String>();
+			while (headerNames.hasMoreElements()) {
+				String headerName = (String) headerNames.nextElement();
+				objHandshake.put(headerName, request.getHeader(headerName));
+			}
+            SocketIOSession session = sessionFactory.createSession(inbound, sessionId,objHandshake);
             // get and init data handler
             DataHandler dataHandler = newDataHandler(session);
             dataHandler.init(getConfig());

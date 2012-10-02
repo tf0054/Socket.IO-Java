@@ -24,6 +24,8 @@
  */
 package com.glines.socketio.server;
 
+import java.util.LinkedHashMap;
+
 import com.glines.socketio.common.ConnectionState;
 import com.glines.socketio.common.DisconnectReason;
 
@@ -50,6 +52,8 @@ public interface SocketIOSession {
 	long getHeartbeat();
 	void setTimeout(long timeout);
 	long getTimeout();
+	
+	LinkedHashMap<String,String> getHandshake();
 
 	void startTimeoutTimer();
 	void clearTimeoutTimer();

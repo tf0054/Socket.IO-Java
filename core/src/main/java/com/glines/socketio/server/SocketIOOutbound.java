@@ -24,6 +24,8 @@
  */
 package com.glines.socketio.server;
 
+import java.util.LinkedHashMap;
+
 import com.glines.socketio.common.ConnectionState;
 import com.glines.socketio.common.SocketIOException;
 
@@ -44,7 +46,8 @@ public interface SocketIOOutbound {
     void close();
 
     ConnectionState getConnectionState();
-
+    LinkedHashMap<String,String> getHandshake();
+    
     /**
      * Send a message to the client. This method will block if the message will not fit in the
      * outbound buffer.

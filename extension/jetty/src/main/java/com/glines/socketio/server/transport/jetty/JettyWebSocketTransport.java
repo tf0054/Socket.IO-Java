@@ -25,6 +25,8 @@
 package com.glines.socketio.server.transport.jetty;
 
 import java.io.IOException;
+import java.util.Enumeration;
+import java.util.LinkedHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -111,9 +113,24 @@ public final class JettyWebSocketTransport extends AbstractTransport {
                 SocketIOSession session;
                 TransportHandler handler;
                 session = sessionFactory.getSession(sessionId);
-
+                // making handshake from wrong connection??
+				Enumeration<String> headerNames = request.getHeaderNames();
+				LinkedHashMap<String,String> objHandshake = new LinkedHashMap<String,String>();
+				while (headerNames.hasMoreElements()) {
+					String headerName = (String) headerNames.nextElement();
+					objHandshake.put(headerName, request.getHeader(headerName));
+				}
+				objHandshake.put("address", request.getRemoteAddr());
+				objHandshake.put("port", Integer.toString(request.getRemotePort()));
+				objHandshake.put("url", request.getRequestURI());
+				String strTmp = request.getQueryString();
+				if(strTmp != null)
+					objHandshake.put("query", strTmp);
+				else
+					objHandshake.put("query", "");
+				//
                 if (session == null) {
-                    session = sessionFactory.createSession(inbound, sessionId);
+                    session = sessionFactory.createSession(inbound, sessionId, objHandshake);
                     handler = newHandler(WebSocket.class, session);
                     handler.init(getConfig());
                     //handler.onConnect();
