@@ -120,7 +120,7 @@ public class EventBusServlet extends SocketIOServlet {
         }
 
         @Override
-        public void onMessage(int messageType, String message) {
+        public void onMessage(String messageType, String message) {
             if (outbound == null)
                 throw new NullPointerException();
             if (LOGGER.isLoggable(Level.FINE))
@@ -191,6 +191,12 @@ public class EventBusServlet extends SocketIOServlet {
                 }
             }
         }
+
+		@Override
+		public String[] setEventnames() {
+        	return new String[]{"message"};
+		}
+
     }
 
     private final class Endpoints {
@@ -255,7 +261,6 @@ public class EventBusServlet extends SocketIOServlet {
         MessageType(int code) {
             this.code = code;
         }
-
 
         static MessageType valueOf(int code) {
             for (MessageType type : values())

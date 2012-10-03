@@ -41,7 +41,7 @@
                 jQuery('#logs').append('INFO: ' + msg + '\n');
             },
             log: function(msg) {
-                jQuery('#logs').append('TRACE: ' + msg + '\n');
+            //    jQuery('#logs').append('TRACE: ' + msg + '\n');
             }
         };
         var MessageType = {
@@ -52,10 +52,10 @@
         };
 
         var queue = [];
-        var socket = new io.Socket();
+        var socket = io.connect('http://localhost:8080',{rememberTransport: false, transports:["websocket"]});
 
         function send(msg) {
-            if (socket.isConnected()) {
+            if (socket != null) {
                 socket.send($.toJSON([msg]));
             } else {
                 queue.push(msg);
@@ -78,13 +78,15 @@
                 LOG.debug('Reconnecting in 10 seconds...');
                 setTimeout(function() {
                     LOG.info('Reconnecting...');
-                    socket.connect();
+                    socket.socket.connect();
                 }, 10000);
             }
         });
 
-        socket.on('message', function(mtype, obj, error) {
-            LOG.debug('onMessage - type=' + mtype + ', err=' + error + ', data=' + $.toJSON(obj));
+        //socket.on('message', function(mtype, obj, error) {
+       	socket.on('message', function(obj) {
+            //LOG.debug('onMessage - type=' + mtype + ', err=' + error + ', data=' + $.toJSON(obj));
+            LOG.debug('onMessage - data=' + $.toJSON(obj));
             var msg = $.parseJSON(obj);
             if (msg.type == MessageType.PUBLISH) {
                 $('body').append('<p>Firing JSON data ' + msg.data + ' in topic ' + msg.topic + '</p>');
@@ -95,15 +97,15 @@
         window.TESTER = {
             socket: socket,
             start: function() {
-                if (!socket.isConnected()) {
+                if (socket != null) {
                     LOG.info('Starting...');
-                    socket.connect();
+                    socket.socket.connect();
                 }
             },
             stop: function() {
-                if (socket.isConnected()) {
+                if (socket != null) {
                     LOG.info('Stopping...');
-                    socket.close();
+                    socket.socket.close();
                 }
             },
             publish: function(topic, data) {
