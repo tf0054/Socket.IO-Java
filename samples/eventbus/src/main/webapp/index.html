@@ -29,13 +29,16 @@
 <html>
 <head>
     <title>EventBus</title>
+    <style type="text/css">
+		.accordion {cursor:pointer;}
+	</style>
     <script type="text/javascript" src="jquery-1.4.4.min.js"></script>
     <script type="text/javascript" src="jquery.json-2.2.min.js"></script>
     <script type="text/javascript" src="/socket.io/socket.io.js"></script>
     <script type="text/javascript">
         var LOG = {
             debug: function(msg) {
-                jQuery('#logs').append('DEBUG: ' + msg + '\n');
+                jQuery('#logs').append('<span class="logline">DEBUG: ' + msg + '</span>\n');
             },
             info: function(msg) {
                 jQuery('#logs').append('INFO: ' + msg + '\n');
@@ -55,10 +58,11 @@
         var socket = io.connect('http://localhost:8080',{rememberTransport: false, transports:["websocket"]});
 
         function send(msg) {
-            if (socket != null) {
+            if (socket.socket.connected) {
                 socket.send($.toJSON([msg]));
             } else {
                 queue.push(msg);
+                LOG.info('msg was queued: '+msg);
             }
         }
 
@@ -78,7 +82,7 @@
                 LOG.debug('Reconnecting in 10 seconds...');
                 setTimeout(function() {
                     LOG.info('Reconnecting...');
-                    socket.socket.connect();
+                    socket.socket.reconnect();
                 }, 10000);
             }
         });
@@ -89,7 +93,7 @@
             LOG.debug('onMessage - data=' + $.toJSON(obj));
             var msg = $.parseJSON(obj);
             if (msg.type == MessageType.PUBLISH) {
-                $('body').append('<p>Firing JSON data ' + msg.data + ' in topic ' + msg.topic + '</p>');
+            	jQuery('#display').append('<p>Firing JSON data ' + msg.data + ' in topic ' + msg.topic + '</p>');
             }
         });
 
@@ -97,15 +101,15 @@
         window.TESTER = {
             socket: socket,
             start: function() {
-                if (socket != null) {
+                if (socket.socket.connected) {
                     LOG.info('Starting...');
-                    socket.socket.connect();
+                    socket.socket.reconnect();
                 }
             },
             stop: function() {
-                if (socket != null) {
+                if (socket.socket.connected) {
                     LOG.info('Stopping...');
-                    socket.socket.close();
+                    socket.socket.disconnect();
                 }
             },
             publish: function(topic, data) {
@@ -193,6 +197,18 @@
 
         });
     </script>
+<script type="text/javascript">
+$(document).ready(function(){
+    $('.accordion').click(function() {
+        $(this).next().slideToggle();
+    }).next().hide();
+    $('.logline').live("click", function(){
+    	//$(this).next().slideToggle();
+        //$(this).css('display', 'none');
+        $(this).remove();
+    });
+});
+</script>
 </head>
 <body>
 
@@ -201,12 +217,16 @@
 
 Topic: <input type="text" id="topic" value="myTopic"> <input type="button" id="subscribe" value="Subscribe">
 Message: <input type="text" id="msg" value="my message"> <input type="button" id="send" value="Send">
-
-<p><strong>In the Firebug console, you can execute:</strong></p>
+<div>
+<h3 class="accordion">In the Firebug console >></h3>
+<div><strong> you can execute:</strong>
 <pre>TESTER.start();</pre>
 <pre>TESTER.subscribe('myTopic');</pre>
 <pre>TESTER.publish('myTopic', 'myMessage');</pre>
-<pre>TESTER.stop();</pre>
+<pre>TESTER.stop();</pre></div>
+</div>
+<hr/>
+<pre id="display"></pre>
 <hr/>
 <pre id="logs"></pre>
 </body>

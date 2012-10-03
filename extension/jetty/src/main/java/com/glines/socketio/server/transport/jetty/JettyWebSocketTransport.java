@@ -137,10 +137,13 @@ public final class JettyWebSocketTransport extends AbstractTransport {
                 } else {
                     handler = session.getTransportHandler();
                 }
-
-                wsFactory.upgrade(request, response, WebSocket.class.cast(handler), protocol);
-                handler.sendMessage(new SocketIOFrame(SocketIOFrame.FrameType.CONNECT, SocketIOFrame.TEXT_MESSAGE_TYPE, ""));
-                handler.onConnect();
+                if(handler != null){
+                	wsFactory.upgrade(request, response, WebSocket.class.cast(handler), protocol);
+	                handler.sendMessage(new SocketIOFrame(SocketIOFrame.FrameType.CONNECT, SocketIOFrame.TEXT_MESSAGE_TYPE, ""));
+	                handler.onConnect();
+                } else {
+                    response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE, this + " handler is null");
+                }
             }
         } else {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, this + " transport error: Invalid request");
