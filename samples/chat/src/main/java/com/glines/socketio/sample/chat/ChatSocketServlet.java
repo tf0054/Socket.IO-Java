@@ -92,6 +92,7 @@ public class ChatSocketServlet extends SocketIOServlet {
 	                }
                     emit("message", "Slept for " + sleepTime + " seconds.");
 	            } else if (message.startsWith("/burst")) {
+	            	// send back burst message to the user.
 	                int burstNum = 10;
 	                String parts[] = message.split("\\s+");
 	                if (parts.length == 2) {
@@ -114,6 +115,7 @@ public class ChatSocketServlet extends SocketIOServlet {
                             e.printStackTrace();
                         }
                     }
+                    broadcast(strKey, "[\""+sessionId+"\",\"(bursting with server)\"");
 	            } else {
 	                broadcast(strKey, "[\""+sessionId+"\",\""+message+"\"]");
 	            }

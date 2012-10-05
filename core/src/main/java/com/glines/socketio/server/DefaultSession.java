@@ -28,6 +28,7 @@ import com.glines.socketio.common.ConnectionState;
 import com.glines.socketio.common.DisconnectReason;
 import com.glines.socketio.common.SocketIOException;
 
+import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.*;
@@ -64,6 +65,8 @@ class DefaultSession implements SocketIOSession {
     private boolean timedout;
     private String closeId;
     
+    long lStartTime = (long)0;
+
     DefaultSession(SocketIOSessionManager socketIOSessionManager, SocketIOInbound inbound, String sessionId, LinkedHashMap<String,String> objHandshake) {
         this.socketIOSessionManager = socketIOSessionManager;
         this.inbound = inbound;
@@ -120,6 +123,7 @@ class DefaultSession implements SocketIOSession {
     @Override
     public void startTimeoutTimer() {
         clearTimeoutTimer();
+        lStartTime = new Date().getTime(); //start time
         if (!timedout && timeout > 0) {
             timeoutTask = scheduleTask(new Runnable() {
                 @Override
@@ -136,14 +140,16 @@ class DefaultSession implements SocketIOSession {
             timeoutTask.cancel();
             timeoutTask = null;
         }
+        if (LOGGER.isLoggable(Level.FINE))
+            LOGGER.log(Level.FINE, "heartbeat timeout was resetted. ping/pong dualing time is "+
+            		Long.toString((long) new Date().getTime() - lStartTime) + " milliseconds.");
     }
 
     private void sendPing() {
         String data = "" + messageId.incrementAndGet();
-        if (LOGGER.isLoggable(Level.FINE))
-            LOGGER.log(Level.FINE, "Session[" + sessionId + "]: sendPing " + data);
         try {
-            handler.sendMessage(new SocketIOFrame(SocketIOFrame.FrameType.CONNECT, 0, data));
+        	handler.sendMessage(new SocketIOFrame(
+        			SocketIOFrame.FrameType.HEARTBEAT, SocketIOFrame.FrameType.MESSAGE.value(), data));
         } catch (SocketIOException e) {
             if (LOGGER.isLoggable(Level.FINE))
                 LOGGER.log(Level.FINE, "handler.sendMessage failed: ", e);
@@ -214,26 +220,29 @@ class DefaultSession implements SocketIOSession {
                 onPing(message.getData());
             case HEARTBEAT:
                 // Ignore this message type as they are only intended to be from server to client.
+                if (LOGGER.isLoggable(Level.FINE))
+                    LOGGER.log(Level.FINE, "Session[" + sessionId + "]: HEARTBEAT: " + message.getData());
+                onPong("");
                 startHeartbeatTimer();
                 break;
             case CLOSE:
                 if (LOGGER.isLoggable(Level.FINE))
-                    LOGGER.log(Level.FINE, "Session[" + sessionId + "]: onClose: " + message.getData());
+                    LOGGER.log(Level.FINE, "Session[" + sessionId + "]: CLOSE: " + message.getData());
                 onClose(message.getData());
                 break;
             case MESSAGE:
                 if (LOGGER.isLoggable(Level.FINE))
-                    LOGGER.log(Level.FINE, "Session[" + sessionId + "]: onMessage(FrameType=MESSAGE): " + message.getData());
+                    LOGGER.log(Level.FINE, "Session[" + sessionId + "]: MESSAGE: " + message.getData());
                 onMessage(message.getFrameType().value(), message.getData());
                 break;
             case JSON_MESSAGE:
                 if (LOGGER.isLoggable(Level.FINE))
-                    LOGGER.log(Level.FINE, "Session[" + sessionId + "]: onMessage(FrameType=JSON): " + message.getData());
+                    LOGGER.log(Level.FINE, "Session[" + sessionId + "]: JSON: " + message.getData());
                 onMessage(message.getFrameType().value(), message.getData());
                 break;
             case EVENT:
                 if (LOGGER.isLoggable(Level.FINE))
-                    LOGGER.log(Level.FINE, "Session[" + sessionId + "]: onMessage(FrameType=EVENT): " + message.getData());
+                    LOGGER.log(Level.FINE, "Session[" + sessionId + "]: EVENT: " + message.getData());
                 onMessage(message.getFrameType().value(), message.getData());
                 break;
             default:
@@ -242,10 +251,21 @@ class DefaultSession implements SocketIOSession {
         }
     }
 
+    //@Override
+    public void onConnect(String data) {
+        try {
+            handler.sendMessage(new SocketIOFrame(SocketIOFrame.FrameType.CONNECT, 0, data));
+        } catch (SocketIOException e) {
+            if (LOGGER.isLoggable(Level.FINE))
+                LOGGER.log(Level.FINE, "handler.sendMessage failed: ", e);
+            handler.abort();
+        }
+    }
     @Override
     public void onPing(String data) {
         try {
-            handler.sendMessage(new SocketIOFrame(SocketIOFrame.FrameType.CONNECT, 0, data));
+        	handler.sendMessage(new SocketIOFrame(
+        			SocketIOFrame.FrameType.HEARTBEAT, SocketIOFrame.FrameType.MESSAGE.value(), data));
         } catch (SocketIOException e) {
             if (LOGGER.isLoggable(Level.FINE))
                 LOGGER.log(Level.FINE, "handler.sendMessage failed: ", e);

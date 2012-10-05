@@ -47,6 +47,7 @@
             //    jQuery('#logs').append('TRACE: ' + msg + '\n');
             }
         };
+        
         var MessageType = {
             SUBSCRIBE: 1,
             UNSUBSCRIBE: 2,
@@ -94,6 +95,8 @@
             var msg = $.parseJSON(obj);
             if (msg.type == MessageType.PUBLISH) {
             	jQuery('#display').append('<p>Firing JSON data ' + msg.data + ' in topic ' + msg.topic + '</p>');
+            }else if(msg.type == MessageType.ACK) {
+            	LOG.debug('ACK was received.');
             }
         });
 
@@ -193,8 +196,7 @@
             } catch(e) {
                 LOG.log(e);
             }
-
-
+            
         });
     </script>
 <script type="text/javascript">

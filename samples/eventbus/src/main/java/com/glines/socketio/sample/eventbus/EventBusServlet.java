@@ -250,10 +250,10 @@ public class EventBusServlet extends SocketIOServlet {
 
     private static enum MessageType {
 
-        ACK(4),
         SUBSCRIBE(1),
         UNSUBSCRIBE(2),
         PUBLISH(3),
+        ACK(4),
         UNKNOWN(0);
 
         final int code;

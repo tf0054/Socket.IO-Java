@@ -46,8 +46,10 @@ import java.util.logging.Logger;
 @Handle({TransportType.WEB_SOCKET, TransportType.FLASH_SOCKET})
 public final class JettyWebSocketTransportHandler extends AbstractTransportHandler implements WebSocket.OnTextMessage, WebSocket.OnBinaryMessage {
 
-    private static final long DEFAULT_HEARTBEAT_DELAY = SocketIOConfig.DEFAULT_MAX_IDLE / 2;
-    private static final long DEFAULT_HEARTBEAT_TIMEOUT = 10 * 1000;
+    //private static final long DEFAULT_HEARTBEAT_DELAY = SocketIOConfig.DEFAULT_MAX_IDLE / 2;
+    //private static final long DEFAULT_HEARTBEAT_TIMEOUT = 10 * 1000;
+    private static final long DEFAULT_HEARTBEAT_DELAY = 1*100;
+    private static final long DEFAULT_HEARTBEAT_TIMEOUT = 3*100;
 
     private static final Logger LOGGER = Logger.getLogger(JettyWebSocketTransportHandler.class.getName());
 
