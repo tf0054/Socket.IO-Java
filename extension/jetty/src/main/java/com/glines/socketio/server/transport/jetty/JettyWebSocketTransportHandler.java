@@ -48,8 +48,8 @@ public final class JettyWebSocketTransportHandler extends AbstractTransportHandl
 
     //private static final long DEFAULT_HEARTBEAT_DELAY = SocketIOConfig.DEFAULT_MAX_IDLE / 2;
     //private static final long DEFAULT_HEARTBEAT_TIMEOUT = 10 * 1000;
-    private static final long DEFAULT_HEARTBEAT_DELAY = 1*100;
-    private static final long DEFAULT_HEARTBEAT_TIMEOUT = 3*100;
+    private static final long DEFAULT_HEARTBEAT_DELAY = 3*1000;
+    private static final long DEFAULT_HEARTBEAT_TIMEOUT = 6*1000;
 
     private static final Logger LOGGER = Logger.getLogger(JettyWebSocketTransportHandler.class.getName());
 

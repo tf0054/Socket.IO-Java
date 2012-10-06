@@ -122,7 +122,8 @@ class DefaultSession implements SocketIOSession {
 
     @Override
     public void startTimeoutTimer() {
-        clearTimeoutTimer();
+    	if(lStartTime != 0)
+    		clearTimeoutTimer();
         lStartTime = new Date().getTime(); //start time
         if (!timedout && timeout > 0) {
             timeoutTask = scheduleTask(new Runnable() {
@@ -143,6 +144,7 @@ class DefaultSession implements SocketIOSession {
         if (LOGGER.isLoggable(Level.FINE))
             LOGGER.log(Level.FINE, "heartbeat timeout was resetted. ping/pong dualing time is "+
             		Long.toString((long) new Date().getTime() - lStartTime) + " milliseconds.");
+        lStartTime = (long)0;
     }
 
     private void sendPing() {
