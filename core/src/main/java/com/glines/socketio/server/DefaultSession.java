@@ -219,6 +219,7 @@ class DefaultSession implements SocketIOSession {
         //LOGGER.log(Level.INFO, "Session[" + sessionId + "] with state = "+state+" on "+ this.toString());
         switch (message.getFrameType()) {
             case CONNECT:
+            	// TODO never used?
                 onPing(message.getData());
             case HEARTBEAT:
                 // Ignore this message type as they are only intended to be from server to client.
@@ -259,7 +260,7 @@ class DefaultSession implements SocketIOSession {
             handler.sendMessage(new SocketIOFrame(SocketIOFrame.FrameType.CONNECT, 0, data));
         } catch (SocketIOException e) {
             if (LOGGER.isLoggable(Level.FINE))
-                LOGGER.log(Level.FINE, "handler.sendMessage failed: ", e);
+                LOGGER.log(Level.FINE, "connect-back failed: ", e);
             handler.abort();
         }
     }
@@ -270,7 +271,7 @@ class DefaultSession implements SocketIOSession {
         			SocketIOFrame.FrameType.HEARTBEAT, SocketIOFrame.FrameType.MESSAGE.value(), data));
         } catch (SocketIOException e) {
             if (LOGGER.isLoggable(Level.FINE))
-                LOGGER.log(Level.FINE, "handler.sendMessage failed: ", e);
+                LOGGER.log(Level.FINE, "ping failed: ", e);
             handler.abort();
         }
     }
@@ -324,7 +325,6 @@ class DefaultSession implements SocketIOSession {
 
     @Override
     public void onConnect(TransportHandler handler) {
-        //LOGGER.log(Level.INFO, "Session[" + sessionId + "] with state = "+state+" on "+ this.toString());
         if (handler == null) {
             state = ConnectionState.CLOSED;
             inbound = null;
