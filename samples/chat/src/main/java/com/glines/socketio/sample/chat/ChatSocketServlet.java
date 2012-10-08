@@ -131,7 +131,7 @@ public class ChatSocketServlet extends SocketIOServlet {
 	        	// clientId is 1 or 2 ...
 	        	strTmp += c.clientId+",";
 	        }
-	        strTmp = strTmp.substring(0, strTmp.length()-1);
+	        strTmp = strTmp.substring(0, strTmp.length()-1); // chop()
             emit("message","holded sessions are "+strTmp);
         }
         

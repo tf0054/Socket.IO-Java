@@ -94,12 +94,11 @@
             LOG.debug('onMessage - data=' + $.toJSON(obj));
             var msg = $.parseJSON(obj);
             if (msg.type == MessageType.PUBLISH) {
-            	jQuery('#display').append('<p>Firing JSON data ' + msg.data + ' in topic ' + msg.topic + '</p>');
+            	jQuery('#display').append('Firing JSON data <font color="blue">' + msg.data + '</font> in topic <font color="red">' + msg.topic + '</font></br>');
             }else if(msg.type == MessageType.ACK) {
             	LOG.debug('ACK was received.');
             }
         });
-
 
         window.TESTER = {
             socket: socket,
@@ -116,7 +115,7 @@
                 }
             },
             publish: function(topic, data) {
-                data = $.toJSON(data);
+                //data = $.toJSON(data);
                 LOG.debug('publish on topic ' + topic + ' data:' + data);
                 send({
                     type: MessageType.PUBLISH,
@@ -158,6 +157,7 @@
 
             $('#send').click(function() {
                 TESTER.publish($('#topic').val(), $('#msg').val());
+                $('#msg').val("my message "+randomString(8));
             });
 
             LOG.log('===== WS =====');
@@ -210,6 +210,19 @@ $(document).ready(function(){
         $(this).remove();
     });
 });
+function randomString(length) {
+    var chars = '0123456789abcdefghiklmnopqrstuvwxyz'.split('');
+
+    if (! length) {
+        length = Math.floor(Math.random() * chars.length);
+    }
+
+    var str = '';
+    for (var i = 0; i < length; i++) {
+        str += chars[Math.floor(Math.random() * chars.length)];
+    }
+    return str;
+}
 </script>
 </head>
 <body>
@@ -228,7 +241,9 @@ Message: <input type="text" id="msg" value="my message"> <input type="button" id
 <pre>TESTER.stop();</pre></div>
 </div>
 <hr/>
-<pre id="display"></pre>
+<font face="Courier">
+<div id="display"></div>
+</font>
 <hr/>
 <pre id="logs"></pre>
 </body>

@@ -59,7 +59,9 @@ public class EventBusServlet extends SocketIOServlet {
     protected SocketIOInbound doSocketIOConnect(HttpServletRequest request) {
         if (LOGGER.isLoggable(Level.FINE))
             LOGGER.fine("doSocketIOConnect : " + request.getRemoteHost() + ":" + request.getRemotePort());
-        return new Endpoint(request.getSession().getId(), request.getRemoteHost(), request.getRemotePort());
+        // NG - tab browser got problem..
+        //return new Endpoint(request.getSession().getId(), request.getRemoteHost(), request.getRemotePort());        
+        return new Endpoint(Long.toString(System.currentTimeMillis()), request.getRemoteHost(), request.getRemotePort());
     }
 
     private final class Endpoint implements SocketIOInbound {
