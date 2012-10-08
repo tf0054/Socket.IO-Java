@@ -66,12 +66,19 @@ public final class JettyWebSocketTransportHandler extends AbstractTransportHandl
     }
 
     @Override
+    public void onConnect() {
+        getSession().onConnect(this);
+    }
+
+    @Override
     public void onOpen(Connection connection) {
       this.outbound = connection;
     }
 
     @Override
     public void onClose(int closeCode, String message) {
+        if (LOGGER.isLoggable(Level.FINE))
+            LOGGER.log(Level.FINE, "Session[" + getSession().getSessionId() + "]: onClose("+closeCode+","+message+") from WebSocketConnectionRFC6455");
         getSession().onShutdown();
     }
 
@@ -171,10 +178,5 @@ public final class JettyWebSocketTransportHandler extends AbstractTransportHandl
             outbound = null;
         }
         getSession().onShutdown();
-    }
-
-    @Override
-    public void onConnect() {
-        getSession().onConnect(this);
     }
 }

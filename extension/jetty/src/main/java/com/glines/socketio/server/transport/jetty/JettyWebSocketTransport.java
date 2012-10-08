@@ -110,10 +110,9 @@ public final class JettyWebSocketTransport extends AbstractTransport {
                 }
                 response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
             } else {
-                SocketIOSession session;
+                SocketIOSession session = sessionFactory.getSession(sessionId);
                 TransportHandler handler;
-                session = sessionFactory.getSession(sessionId);
-                // making handshake from wrong connection??
+                // 
 				Enumeration<String> headerNames = request.getHeaderNames();
 				LinkedHashMap<String,String> objHandshake = new LinkedHashMap<String,String>();
 				while (headerNames.hasMoreElements()) {
@@ -129,18 +128,27 @@ public final class JettyWebSocketTransport extends AbstractTransport {
 				else
 					objHandshake.put("query", "");
 				//
+                boolean bolDo = false;
                 if (session == null) {
                     session = sessionFactory.createSession(inbound, sessionId, objHandshake);
                     handler = newHandler(WebSocket.class, session);
                     handler.init(getConfig());
                     //handler.onConnect();
+                    if (LOGGER.isLoggable(Level.WARNING))
+                        LOGGER.log(Level.WARNING, "Session[" + sessionId + "]: handler was created. "+handler.toString());
+                    bolDo = true;
                 } else {
                     handler = session.getTransportHandler();
+                    if (LOGGER.isLoggable(Level.WARNING))
+                        LOGGER.log(Level.WARNING, "Session[" + sessionId + "]: handler was taken from existent session. "+handler.toString());
                 }
+				objHandshake.put("session", session.getSessionId());
                 if(handler != null){
                 	wsFactory.upgrade(request, response, WebSocket.class.cast(handler), protocol);
 	                handler.sendMessage(new SocketIOFrame(SocketIOFrame.FrameType.CONNECT, SocketIOFrame.TEXT_MESSAGE_TYPE, ""));
-	                handler.onConnect();
+	                // onConnect should be fired after webSocket connection is established.
+	                if(bolDo)
+	                	handler.onConnect();
                 } else {
                     response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE, this + " handler is null");
                 }

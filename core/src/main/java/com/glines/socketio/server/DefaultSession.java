@@ -28,7 +28,6 @@ import com.glines.socketio.common.ConnectionState;
 import com.glines.socketio.common.DisconnectReason;
 import com.glines.socketio.common.SocketIOException;
 
-import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.*;
@@ -37,8 +36,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 
 /**
  * @author Mathieu Carbou (mathieu.carbou@gmail.com)
@@ -73,7 +70,7 @@ class DefaultSession implements SocketIOSession {
         this.sessionId = sessionId;
         this.objHandshake = objHandshake;
         if (LOGGER.isLoggable(Level.FINE))
-            LOGGER.log(Level.FINE, "DefaultSession was created.");
+            LOGGER.log(Level.FINE, "DefaultSession was created. "+this.toString());
     }
 
     @Override
@@ -124,7 +121,7 @@ class DefaultSession implements SocketIOSession {
     public void startTimeoutTimer() {
     	if(lStartTime != 0)
     		clearTimeoutTimer();
-        lStartTime = new Date().getTime(); //start time
+        lStartTime = System.currentTimeMillis();
         if (!timedout && timeout > 0) {
             timeoutTask = scheduleTask(new Runnable() {
                 @Override
@@ -133,18 +130,6 @@ class DefaultSession implements SocketIOSession {
                 }
             }, timeout);
         }
-    }
-
-    @Override
-    public void clearTimeoutTimer() {
-        if (timeoutTask != null) {
-            timeoutTask.cancel();
-            timeoutTask = null;
-        }
-        if (LOGGER.isLoggable(Level.FINE))
-            LOGGER.log(Level.FINE, "heartbeat timeout was resetted. ping/pong dualing time is "+
-            		Long.toString((long) new Date().getTime() - lStartTime) + " milliseconds.");
-        lStartTime = (long)0;
     }
 
     private void sendPing() {
@@ -179,6 +164,21 @@ class DefaultSession implements SocketIOSession {
             hbDelayTask.cancel();
             hbDelayTask = null;
         }
+    }
+
+    @Override
+    public void clearTimeoutTimer() {
+        if (timeoutTask != null) {
+            timeoutTask.cancel();
+            timeoutTask = null;
+        }
+        if (LOGGER.isLoggable(Level.FINE))
+        	if(lStartTime > 0)
+        		LOGGER.log(Level.FINE, "heartbeat timeout was resetted. ping/pong with "+objHandshake.get("address")+":"+objHandshake.get("port")+" took "+
+        				Long.toString(System.currentTimeMillis() - lStartTime) + " milliseconds.");
+        	else
+        		LOGGER.log(Level.FINE, "heartbeat timeout was resetted. but cannot calc ducation time because start time isn't recorded.");
+        lStartTime = (long)0;
     }
 
     @Override
@@ -328,11 +328,11 @@ class DefaultSession implements SocketIOSession {
         if (handler == null) {
             state = ConnectionState.CLOSED;
             inbound = null;
-            socketIOSessionManager.socketIOSessions.remove(sessionId);
+            socketIOSessionManager.removeSession(sessionId);
         } else if (this.handler == null) {
             this.handler = handler;
             if (inbound == null) {
-            	LOGGER.log(Level.INFO,"hander was aborted.");
+            	LOGGER.log(Level.INFO,"hander was aborted because inbound = null.");
                 state = ConnectionState.CLOSED;
                 handler.abort();
             } else {
@@ -347,6 +347,9 @@ class DefaultSession implements SocketIOSession {
                 }
             }
         } else {
+        	// this kills first session? 2012/10/07
+            if (LOGGER.isLoggable(Level.WARNING))
+                LOGGER.log(Level.WARNING, "Session[" + sessionId + "]: kill session with state = "+state);
             handler.abort();
         }
     }
@@ -435,24 +438,29 @@ class DefaultSession implements SocketIOSession {
                     LOGGER.log(Level.WARNING, "Session[" + sessionId + "]: Exception thrown by SocketIOInbound.onDisconnect()", e);
             }
             inbound = null;
+        }else{
+            if (LOGGER.isLoggable(Level.WARNING))
+                LOGGER.log(Level.WARNING, "Session[" + sessionId + "]: inbound is null");
         }
     }
 
     @Override
     public void onShutdown() {
-        if (LOGGER.isLoggable(Level.FINE))
-            LOGGER.log(Level.FINE, "Session[" + sessionId + "]: onShutdown");
         if (inbound != null) {
             if (state == ConnectionState.CLOSING) {
+                if (LOGGER.isLoggable(Level.FINE))
+                    LOGGER.log(Level.FINE, "Session[" + sessionId + "]: onShutdown: state = CLOSING");
                 if (closeId != null) {
                     onDisconnect(DisconnectReason.CLOSE_FAILED);
                 } else {
                     onDisconnect(DisconnectReason.CLOSED_REMOTELY);
                 }
             } else {
+                if (LOGGER.isLoggable(Level.FINE))
+                    LOGGER.log(Level.FINE, "Session[" + sessionId + "]: onShutdown: state = "+state);
                 onDisconnect(DisconnectReason.ERROR);
             }
         }
-        socketIOSessionManager.socketIOSessions.remove(sessionId);
+        socketIOSessionManager.removeSession(sessionId);
     }
 }

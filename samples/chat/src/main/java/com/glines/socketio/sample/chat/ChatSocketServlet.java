@@ -55,21 +55,22 @@ public class ChatSocketServlet extends SocketIOServlet {
 
     private class ChatConnection implements SocketIOInbound {
         private volatile SocketIOOutbound outbound = null;
-        private Integer sessionId = ids.getAndIncrement();
+        private Integer clientId = ids.getAndIncrement();
 
         @Override
         public void onConnect(SocketIOOutbound outbound) {
             this.outbound = outbound;
             connections.offer(this);
             emit("welcome", "Welcome to Socket.IO Chat!");
-            broadcast("announcement", sessionId + " connected");
+            broadcast("announcement", clientId + " connected.");
+            emit("message", "your name is "+clientId+". (and your sessionId is "+outbound.getHandshake().get("session")+".)");
         }
 
         @Override
         public void onDisconnect(DisconnectReason reason, String errorMessage) {
             this.outbound = null;
             connections.remove(this);
-            broadcast("announcement", sessionId + " disconnected");
+            broadcast("announcement", clientId + " disconnected.");
         }
 
         @Override
@@ -115,13 +116,25 @@ public class ChatSocketServlet extends SocketIOServlet {
                             e.printStackTrace();
                         }
                     }
-                    broadcast(strKey, "[\""+sessionId+"\",\"(bursting with server)\"");
+                    broadcast(strKey, "[\""+clientId+"\",\"(bursting with server)\"]");
+	            } else if(message.startsWith("/sessions")) {
+	            	replySessions();
 	            } else {
-	                broadcast(strKey, "[\""+sessionId+"\",\""+message+"\"]");
+	                broadcast(strKey, "[\""+clientId+"\",\""+message+"\"]");
 	            }
         	}
         }
 
+        private void replySessions() {
+        	String strTmp = "";
+	        for (ChatConnection c : connections) {
+	        	// clientId is 1 or 2 ...
+	        	strTmp += c.clientId+",";
+	        }
+	        strTmp = strTmp.substring(0, strTmp.length()-1);
+            emit("message","holded sessions are "+strTmp);
+        }
+        
         private void broadcast(String strKey, String message) {
             for (ChatConnection c : connections) {
                 if (c != this) {
@@ -132,13 +145,18 @@ public class ChatSocketServlet extends SocketIOServlet {
                     }
                 }
             }
+            if(connections.size() == 1){
+            	message = message.replace("\"", "\\\"");
+            	emit("message","Sorry, there is no other connections to send your message.. (" + strKey+", "+message+")");
+            }
         }
         
         private void emit(String strKey, String message) {
             try {
             	outbound.emitMessage(strKey, message);
-            } catch (IOException e) {
+            } catch (Exception e) {
                 outbound.disconnect();
+            	e.printStackTrace();
             }
         }
         

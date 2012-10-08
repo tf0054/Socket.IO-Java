@@ -131,7 +131,14 @@ public abstract class SocketIOServlet extends HttpServlet {
         } else if (parts.length <= 2) { // handshake
             OutputStream os = response.getOutputStream();
 
-            String body = request.getSession().getId().toString() +
+            // NG - This assigns same id on same browser, multi tabs.  
+            //String body = request.getSession().getId().toString() +
+            
+            // NG - This assings same id on same browser, multi tabs. Does this mean chrome use same port for communicating same server?
+            //String body = request.getSession().getId().toString() + Integer.toString(request.getRemotePort()) +
+
+            // OK - Using this, unique handler is create for each page. 
+            String body = Long.toString(System.currentTimeMillis()) +
                           ":" + DEFAULT_HEARTBEAT_TIMEOUT +
                           ":" + DEFAULT_TIMEOUT + ":"; // sessionId : heartbeat : timeout
 

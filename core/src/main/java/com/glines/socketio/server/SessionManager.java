@@ -32,4 +32,5 @@ import java.util.LinkedHashMap;
 public interface SessionManager {
     SocketIOSession createSession(SocketIOInbound inbound, String sessionId, LinkedHashMap<String,String> objHandshake);
     SocketIOSession getSession(String sessionId);
+    void removeSession(String sessionId);
 }

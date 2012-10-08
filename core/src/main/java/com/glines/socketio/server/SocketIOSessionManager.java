@@ -29,11 +29,15 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public final class SocketIOSessionManager implements SessionManager {
 
-    final ConcurrentMap<String, SocketIOSession> socketIOSessions = new ConcurrentHashMap<String, SocketIOSession>();
+    private final ConcurrentMap<String, SocketIOSession> socketIOSessions = new ConcurrentHashMap<String, SocketIOSession>();
     final ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
+
+    private static final Logger LOGGER = Logger.getLogger(SocketIOSessionManager.class.getName());
 
     @Override
     public SocketIOSession createSession(SocketIOInbound inbound, String sessionId, LinkedHashMap<String,String> objHandshake) {
@@ -46,4 +50,11 @@ public final class SocketIOSessionManager implements SessionManager {
     public SocketIOSession getSession(String sessionId) {
         return socketIOSessions.get(sessionId);
     }
+
+	@Override
+	public void removeSession(String sessionId) {
+		socketIOSessions.remove(sessionId);
+        if (LOGGER.isLoggable(Level.WARNING))
+            LOGGER.log(Level.WARNING, "Session[" + sessionId + "]: session("+sessionId+") was removed. "+socketIOSessions.size());
+	}
 }
