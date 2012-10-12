@@ -55,4 +55,7 @@ public interface SocketIOInbound {
 
     //
 	String[] setEventnames();
+
+    //
+	void setNamespace(String a);
 }

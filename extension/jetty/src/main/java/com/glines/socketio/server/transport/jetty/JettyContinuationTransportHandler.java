@@ -456,4 +456,10 @@ public final class JettyContinuationTransportHandler extends AbstractTransportHa
 		// TODO Auto-generated method stub
 		return null;
 	}
+
+	@Override
+	public void setNamespace(String a) {
+		// TODO Auto-generated method stub
+		
+	}
 }

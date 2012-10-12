@@ -217,10 +217,21 @@ class DefaultSession implements SocketIOSession {
     @Override
     public void onMessage(SocketIOFrame message) {
         //LOGGER.log(Level.INFO, "Session[" + sessionId + "] with state = "+state+" on "+ this.toString());
+    	String strData = message.getData();
         switch (message.getFrameType()) {
             case CONNECT:
             	// TODO never used?
-                onPing(message.getData());
+                //onPing(strData);
+                String strTmp = strData.substring(strData.lastIndexOf(":")+1);
+                if(strTmp.length() > 0){
+                	inbound.setNamespace(strTmp);
+                	handler.setNamespace(strTmp);
+                    if (LOGGER.isLoggable(Level.FINE))
+                        LOGGER.log(Level.FINE, "Session[" + sessionId + "]: getNamespace: " + strTmp);
+                }
+            	onConnect("");
+                if (LOGGER.isLoggable(Level.FINE))
+                    LOGGER.log(Level.FINE, "Session[" + sessionId + "]: CONNECT: " + message.getData());
             case HEARTBEAT:
                 // Ignore this message type as they are only intended to be from server to client.
                 if (LOGGER.isLoggable(Level.FINE))
@@ -264,6 +275,7 @@ class DefaultSession implements SocketIOSession {
             handler.abort();
         }
     }
+    
     @Override
     public void onPing(String data) {
         try {
@@ -358,6 +370,10 @@ class DefaultSession implements SocketIOSession {
 	public void onMessage(int frameType, String message) {
 		if (inbound != null) {
 			switch (frameType) {
+			case 1: // SocketIOFrame.FrameType.MESSAGE.value():
+				if (LOGGER.isLoggable(Level.FINE))
+					LOGGER.log(Level.FINE, "Session[" + sessionId
+							+ "]: message header is \"1:\" (" + message + ")");
 			case 3: // SocketIOFrame.FrameType.MESSAGE.value():
 			case 4: // SocketIOFrame.FrameType.JSON_MESSAGE.value():
 				if (LOGGER.isLoggable(Level.FINE))
@@ -420,6 +436,9 @@ class DefaultSession implements SocketIOSession {
 								e);
 				}
 			}
+		}else{
+			if (LOGGER.isLoggable(Level.FINE))
+				LOGGER.log(Level.FINE, "Session[" + sessionId + "]: inbound is null.");
 		}
 	}
 

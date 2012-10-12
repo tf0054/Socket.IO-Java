@@ -138,7 +138,7 @@ public class SocketIOFrame {
 
 			String endpoint = "";
             if (end - start > 1) {
-				endpoint = data.substring(start + 1, end);
+				endpoint = data.substring(start, end);
 			}
 
 			start = end + 1;
@@ -146,21 +146,36 @@ public class SocketIOFrame {
 
 			messages.add(new SocketIOFrame(frameType,
                     frameType == FrameType.MESSAGE ? TEXT_MESSAGE_TYPE : JSON_MESSAGE_TYPE,
-                    data.substring(start, end)));
+                    endpoint, data.substring(start, end)));
 			start = end;
 		}
 		
 		return messages;
 	}
-	
+
+	// ugly..
+	public String encode(String endpoint) {
+		return encode(frameType, endpoint, data);
+	}
+
+	public String encode() {
+		return encode(frameType, data);
+	}
+
 	public static String encode(FrameType type, String data) {
+		return encode(type, "", data);
+	}
+	
+	public static String encode(FrameType type, String endpoint, String data) {
 		StringBuilder str = new StringBuilder(data.length() + 16);
 		str.append(Integer.toHexString(type.value()));
         str.append(SEPERATOR_CHAR);
         //str.append("1"); // message id
 		str.append(SEPERATOR_CHAR);
-		//str.append(""); // endpoint
-		str.append(SEPERATOR_CHAR);
+		if(type.value() != 2){
+			str.append(endpoint);
+		}
+		str.append(SEPERATOR_CHAR);                         
 		str.append(data);
 		return str.toString();
 	}
@@ -168,10 +183,19 @@ public class SocketIOFrame {
 	private final FrameType frameType;
 	private final int messageType;
 	private final String data;
+	private final String endpoint;
 	
 	public SocketIOFrame(FrameType frameType, int messageType, String data) {
 		this.frameType = frameType;
 		this.messageType = messageType;
+		this.endpoint = "";
+		this.data = data;
+	}
+
+	public SocketIOFrame(FrameType frameType, int messageType, String endPoint, String data) {
+		this.frameType = frameType;
+		this.messageType = messageType;
+		this.endpoint = endPoint;
 		this.data = data;
 	}
 	
@@ -182,12 +206,12 @@ public class SocketIOFrame {
 	public int getMessageType() {
 		return messageType;
 	}
+
+	public String getEndPoint() {
+		return endpoint;
+	}
 	
 	public String getData() {
 		return data;
-	}
-	
-	public String encode() {
-		return encode(frameType, data);
 	}
 }

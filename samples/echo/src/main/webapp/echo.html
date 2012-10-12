@@ -93,7 +93,8 @@
     	  }
       }
       
-      var socket = io.connect('http://localhost:8080',{rememberTransport: false, transports:["websocket"]});
+      var socket = io.connect('http://localhost:8080/chat',{rememberTransport: false, transports:["websocket"]});
+      //var socket = io.connect('http://localhost:8080',{rememberTransport: false, transports:["websocket"]});
  	  socket.on('message', function(msg){
 			message(msg);
       });

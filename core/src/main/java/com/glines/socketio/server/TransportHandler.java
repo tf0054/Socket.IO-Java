@@ -48,5 +48,6 @@ public interface TransportHandler extends SocketIOOutbound {
     void abort();
 
     void onConnect();
+    void setNamespace(String a);
 
 }

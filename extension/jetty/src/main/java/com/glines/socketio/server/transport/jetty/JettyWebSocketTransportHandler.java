@@ -54,6 +54,7 @@ public final class JettyWebSocketTransportHandler extends AbstractTransportHandl
     private static final Logger LOGGER = Logger.getLogger(JettyWebSocketTransportHandler.class.getName());
 
     private Connection outbound;
+    private String endpoint = "";
 
     @Override
     protected void init() {
@@ -126,7 +127,7 @@ public final class JettyWebSocketTransportHandler extends AbstractTransportHandl
             if (LOGGER.isLoggable(Level.FINE))
                 LOGGER.log(Level.FINE, "Session[" + getSession().getSessionId() + "]: sendMessage: [" + frame.getFrameType() + "]: " + frame.getData());
             try {
-                outbound.sendMessage(frame.encode());
+                outbound.sendMessage(frame.encode(endpoint));
             } catch (IOException e) {
                 outbound.disconnect();
                 throw new SocketIOException(e);
@@ -179,4 +180,9 @@ public final class JettyWebSocketTransportHandler extends AbstractTransportHandl
         }
         getSession().onShutdown();
     }
+
+	@Override
+	public void setNamespace(String a) {
+		endpoint = a;
+	}
 }
