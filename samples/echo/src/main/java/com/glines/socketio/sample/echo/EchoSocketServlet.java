@@ -28,6 +28,9 @@ import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -35,9 +38,11 @@ import com.glines.socketio.common.DisconnectReason;
 import com.glines.socketio.server.SocketIOInbound;
 import com.glines.socketio.server.SocketIOOutbound;
 import com.glines.socketio.server.SocketIOServlet;
+import com.glines.socketio.server.transport.jetty.JettyWebSocketTransportHandler;
 
 public class EchoSocketServlet extends SocketIOServlet {
 	private static final long serialVersionUID = 1L;
+    private static final Logger LOGGER = Logger.getLogger(JettyWebSocketTransportHandler.class.getName());
 
 	private class EchoConnectionImpl implements SocketIOInbound {
 		private volatile SocketIOOutbound outbound = null;
@@ -107,28 +112,30 @@ public class EchoSocketServlet extends SocketIOServlet {
 	}
 	
     public class Intercepter implements InvocationHandler{
-    	Object target1, target2;
+    	ArrayList<Object> targets = new ArrayList<Object>();
     	int intFlag = 0;
-    	public Intercepter(Object object1, Object object2){
-    		 this.target1 = object1;
-    		 this.target2 = object2;
+    	
+    	public Intercepter(Object[] objects){
+    		for (int i = 0; i < objects.length; i++) {
+    			targets.add(objects[i]);
+    		}
+            if (LOGGER.isLoggable(Level.FINE))
+                LOGGER.fine(objects.length + " classes are found.");
     	}
     	
     	public void setFlag(int a){
     		intFlag = a;
     	}
     	
-    	public Object invoke(Object arg0, Method arg1, Object[] arg2) throws Throwable {
+    	public Object invoke(Object arg0, Method method, Object[] arg2) throws Throwable {
     		Object ret = null;
-    		if(arg1.getName().equals("onConnect")){
-    			// ugly: we have to hand the outbound over to each classes. with this both can handle the next message.
-    			ret = arg1.invoke(target1, arg2);
-    			ret = arg1.invoke(target2, arg2);
-    		}
-    		if(intFlag == 0){
-    			 ret = arg1.invoke(target1, arg2);
+    		if(method.getName().equals("onConnect")){
+    			//we have to hand the outbound over to each classes. with this both can handle the next message.
+        		for (Object target :targets) {
+        			method.invoke(target, arg2);
+        		}
     		}else{
-    			 ret = arg1.invoke(target2, arg2);
+    			 ret = method.invoke(targets.get(intFlag), arg2);
     		}
     		return ret;
     	}
@@ -140,10 +147,12 @@ public class EchoSocketServlet extends SocketIOServlet {
 	protected SocketIOInbound doSocketIOConnect(HttpServletRequest request) {
 		String strUrl = request.getRequestURL().toString();
 		strUrl = strUrl.substring(strUrl.lastIndexOf("/"));
-		//
-		objIntercepter = new Intercepter(
-			new EchoConnectionImpl(),
-			new EchoConnectionWithAsterisk());
+
+		Object[] objects = {
+				new EchoConnectionImpl(),
+				new EchoConnectionWithAsterisk()};
+		
+		objIntercepter = new Intercepter(objects);
 		
 		SocketIOInbound dataTmp = (SocketIOInbound) Proxy.newProxyInstance(
 			SocketIOInbound.class.getClassLoader(),
