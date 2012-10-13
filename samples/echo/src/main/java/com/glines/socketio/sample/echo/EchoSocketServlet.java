@@ -28,8 +28,7 @@ import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
-import java.util.ArrayList;
-import java.util.logging.Level;
+import java.util.HashMap;
 import java.util.logging.Logger;
 
 import javax.servlet.http.HttpServletRequest;
@@ -46,6 +45,11 @@ public class EchoSocketServlet extends SocketIOServlet {
 
 	private class EchoConnectionImpl implements SocketIOInbound {
 		private volatile SocketIOOutbound outbound = null;
+		private Intercepter objIntercepter = null;
+		
+		EchoConnectionImpl(Intercepter a){
+			this.objIntercepter = a;
+		}
 
 		@Override
 		public void onConnect(SocketIOOutbound outbound) {
@@ -72,14 +76,18 @@ public class EchoSocketServlet extends SocketIOServlet {
         }
 
         public void setNamespace(String a) {
-        	if(a.equals("/chat"))
-        		objIntercepter.setFlag(1);
+        		objIntercepter.setNamespace(a);
         }
 	}
 	
-	private class EchoConnectionWithAsterisk implements SocketIOInbound {
+	private class EchoConnectionImplWithAsterisk implements SocketIOInbound {
 		private volatile SocketIOOutbound outbound = null;
-
+		private Intercepter objIntercepter = null;
+		
+		EchoConnectionImplWithAsterisk(Intercepter a){
+			this.objIntercepter = a;
+		}
+		
 		@Override
 		public void onConnect(SocketIOOutbound outbound) {
 			this.outbound = outbound;
@@ -105,61 +113,58 @@ public class EchoSocketServlet extends SocketIOServlet {
         }
         
         public void setNamespace(String a) {
-        	if(a.equals("/chat"))
-        		objIntercepter.setFlag(1);
+        		objIntercepter.setNamespace(a);
         }
-
 	}
 	
     public class Intercepter implements InvocationHandler{
-    	ArrayList<Object> targets = new ArrayList<Object>();
-    	int intFlag = 0;
+    	String strNamespace = "";
+    	HashMap<String, Object> targets = new HashMap<String, Object>();
     	
-    	public Intercepter(Object[] objects){
-    		for (int i = 0; i < objects.length; i++) {
-    			targets.add(objects[i]);
-    		}
-            if (LOGGER.isLoggable(Level.FINE))
-                LOGGER.fine(objects.length + " classes are found.");
+    	public void setIntercepter(HashMap<String, Object> objects){
+    		this.targets = objects;
     	}
     	
-    	public void setFlag(int a){
-    		intFlag = a;
+    	public void setNamespace(String a){
+    		strNamespace = a;
     	}
     	
     	public Object invoke(Object arg0, Method method, Object[] arg2) throws Throwable {
     		Object ret = null;
     		if(method.getName().equals("onConnect")){
     			//we have to hand the outbound over to each classes. with this both can handle the next message.
-        		for (Object target :targets) {
+        		for (Object target :targets.values()) {
         			method.invoke(target, arg2);
         		}
     		}else{
-    			 ret = method.invoke(targets.get(intFlag), arg2);
+    			if(strNamespace.length() != 0){
+    				ret = method.invoke(targets.get(strNamespace), arg2);
+    			} else {
+    				// This is for calling setNamespace
+    				ret = method.invoke(targets.get("/"), arg2);
+    			}
     		}
     		return ret;
     	}
     };
 
-    Intercepter objIntercepter = null;
-    
 	@Override
 	protected SocketIOInbound doSocketIOConnect(HttpServletRequest request) {
-		String strUrl = request.getRequestURL().toString();
-		strUrl = strUrl.substring(strUrl.lastIndexOf("/"));
-
-		Object[] objects = {
-				new EchoConnectionImpl(),
-				new EchoConnectionWithAsterisk()};
+		Intercepter objIntercepter = new Intercepter();
 		
-		objIntercepter = new Intercepter(objects);
+		// make target pairs (url, object for that)
+		HashMap<String, Object> targets = new HashMap<String, Object>();
+		targets.put("/", new EchoConnectionImpl(objIntercepter));
+		targets.put("/chat", new EchoConnectionImplWithAsterisk(objIntercepter));
+		// set target pairs to intercepter
+		objIntercepter.setIntercepter(targets);
 		
-		SocketIOInbound dataTmp = (SocketIOInbound) Proxy.newProxyInstance(
+		SocketIOInbound proxyObj = (SocketIOInbound) Proxy.newProxyInstance(
 			SocketIOInbound.class.getClassLoader(),
 	    	new Class<?>[] { SocketIOInbound.class },
 	    	objIntercepter);
 		
-		return (SocketIOInbound) dataTmp;
+		return (SocketIOInbound) proxyObj;
 	}
 
 }
