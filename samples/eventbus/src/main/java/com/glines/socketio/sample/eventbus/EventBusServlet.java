@@ -29,7 +29,7 @@ import com.glines.socketio.common.SocketIOException;
 import com.glines.socketio.server.SocketIOInbound;
 import com.glines.socketio.server.SocketIOOutbound;
 import com.glines.socketio.server.SocketIOServlet;
-import com.glines.socketio.util.JdkOverLog4j;
+//import com.glines.socketio.util.JdkOverLog4j;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
@@ -51,17 +51,8 @@ public class EventBusServlet extends SocketIOServlet {
 
     @Override
     public void init(ServletConfig config) throws ServletException {
-        JdkOverLog4j.install();
+        //JdkOverLog4j.install();
         super.init(config);
-    }
-
-    @Override
-    protected SocketIOInbound doSocketIOConnect(HttpServletRequest request) {
-        if (LOGGER.isLoggable(Level.FINE))
-            LOGGER.fine("doSocketIOConnect : " + request.getRemoteHost() + ":" + request.getRemotePort());
-        // NG - tab browser got problem..
-        //return new Endpoint(request.getSession().getId(), request.getRemoteHost(), request.getRemotePort());        
-        return new Endpoint(Long.toString(System.currentTimeMillis()), request.getRemoteHost(), request.getRemotePort());
     }
 
     private final class Endpoint implements SocketIOInbound {
@@ -199,6 +190,11 @@ public class EventBusServlet extends SocketIOServlet {
         	return new String[]{"message"};
 		}
 
+		@Override
+		public void setNamespace(String a) {
+            if (LOGGER.isLoggable(Level.FINE))
+                LOGGER.fine("No namespace with this servlet.");
+		}
     }
 
     private final class Endpoints {
@@ -223,9 +219,8 @@ public class EventBusServlet extends SocketIOServlet {
                 endpoints.putIfAbsent(endpoint.getId(), endpoint);
             } else {
                 endpoints.replace(endpoint.getId(), old, endpoint);
-            }
-            if (old != null)
                 old.close();
+            }
         }
 
         void remove(Endpoint endpoint) {
@@ -277,4 +272,12 @@ public class EventBusServlet extends SocketIOServlet {
         }
     }
 
+    @Override
+    protected SocketIOInbound doSocketIOConnect(HttpServletRequest request) {
+        if (LOGGER.isLoggable(Level.FINE))
+            LOGGER.fine("doSocketIOConnect : " + request.getRemoteHost() + ":" + request.getRemotePort());
+        // NG - tab browser got problem..
+        //return new Endpoint(request.getSession().getId(), request.getRemoteHost(), request.getRemotePort());        
+        return new Endpoint(Long.toString(System.currentTimeMillis()), request.getRemoteHost(), request.getRemotePort());
+    }
 }
