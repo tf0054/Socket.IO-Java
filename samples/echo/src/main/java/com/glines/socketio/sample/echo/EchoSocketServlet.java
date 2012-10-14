@@ -25,9 +25,6 @@
 package com.glines.socketio.sample.echo;
 
 import java.io.IOException;
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
 import java.util.HashMap;
 import java.util.logging.Logger;
 
@@ -116,37 +113,6 @@ public class EchoSocketServlet extends SocketIOServlet {
         		objIntercepter.setNamespace(a);
         }
 	}
-	
-    public class Intercepter implements InvocationHandler{
-    	String strNamespace = "";
-    	HashMap<String, Object> targets = new HashMap<String, Object>();
-    	
-    	public void setIntercepter(HashMap<String, Object> objects){
-    		this.targets = objects;
-    	}
-    	
-    	public void setNamespace(String a){
-    		strNamespace = a;
-    	}
-    	
-    	public Object invoke(Object arg0, Method method, Object[] arg2) throws Throwable {
-    		Object ret = null;
-    		if(method.getName().equals("onConnect")){
-    			//we have to hand the outbound over to each classes. with this both can handle the next message.
-        		for (Object target :targets.values()) {
-        			method.invoke(target, arg2);
-        		}
-    		}else{
-    			if(strNamespace.length() != 0){
-    				ret = method.invoke(targets.get(strNamespace), arg2);
-    			} else {
-    				// This is for calling setNamespace
-    				ret = method.invoke(targets.get("/"), arg2);
-    			}
-    		}
-    		return ret;
-    	}
-    };
 
 	@Override
 	protected SocketIOInbound doSocketIOConnect(HttpServletRequest request) {
@@ -156,15 +122,11 @@ public class EchoSocketServlet extends SocketIOServlet {
 		HashMap<String, Object> targets = new HashMap<String, Object>();
 		targets.put("/", new EchoConnectionImpl(objIntercepter));
 		targets.put("/chat", new EchoConnectionImplWithAsterisk(objIntercepter));
+		
 		// set target pairs to intercepter
 		objIntercepter.setIntercepter(targets);
-		
-		SocketIOInbound proxyObj = (SocketIOInbound) Proxy.newProxyInstance(
-			SocketIOInbound.class.getClassLoader(),
-	    	new Class<?>[] { SocketIOInbound.class },
-	    	objIntercepter);
-		
-		return (SocketIOInbound) proxyObj;
+
+		return objIntercepter.getProxyObj();
 	}
 
 }
