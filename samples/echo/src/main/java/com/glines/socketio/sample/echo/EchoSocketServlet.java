@@ -45,6 +45,11 @@ public class EchoSocketServlet extends SocketIOServlet {
 
 	private class EchoConnectionImpl implements SocketIOInbound {
 		private volatile SocketIOOutbound outbound = null;
+		private Intercepter objIntercepter = null;
+		
+		EchoConnectionImpl(Intercepter a){
+			this.objIntercepter = a;
+		}
 
 		@Override
 		public void onConnect(SocketIOOutbound outbound) {
@@ -75,9 +80,14 @@ public class EchoSocketServlet extends SocketIOServlet {
         }
 	}
 	
-	private class EchoConnectionWithAsterisk implements SocketIOInbound {
+	private class EchoConnectionImplWithAsterisk implements SocketIOInbound {
 		private volatile SocketIOOutbound outbound = null;
-
+		private Intercepter objIntercepter = null;
+		
+		EchoConnectionImplWithAsterisk(Intercepter a){
+			this.objIntercepter = a;
+		}
+		
 		@Override
 		public void onConnect(SocketIOOutbound outbound) {
 			this.outbound = outbound;
@@ -105,14 +115,13 @@ public class EchoSocketServlet extends SocketIOServlet {
         public void setNamespace(String a) {
         		objIntercepter.setNamespace(a);
         }
-
 	}
 	
     public class Intercepter implements InvocationHandler{
     	String strNamespace = "";
     	HashMap<String, Object> targets = new HashMap<String, Object>();
     	
-    	public Intercepter(HashMap<String, Object> objects){
+    	public void setIntercepter(HashMap<String, Object> objects){
     		this.targets = objects;
     	}
     	
@@ -139,18 +148,16 @@ public class EchoSocketServlet extends SocketIOServlet {
     	}
     };
 
-    Intercepter objIntercepter = null;
-    
 	@Override
 	protected SocketIOInbound doSocketIOConnect(HttpServletRequest request) {
-		String strUrl = request.getRequestURL().toString();
-		strUrl = strUrl.substring(strUrl.lastIndexOf("/"));
-
-		HashMap<String, Object> targets = new HashMap<String, Object>();
-		targets.put("/", new EchoConnectionImpl());
-		targets.put("/chat", new EchoConnectionWithAsterisk());
+		Intercepter objIntercepter = new Intercepter();
 		
-		objIntercepter = new Intercepter(targets);
+		// make target pairs (url, object for that)
+		HashMap<String, Object> targets = new HashMap<String, Object>();
+		targets.put("/", new EchoConnectionImpl(objIntercepter));
+		targets.put("/chat", new EchoConnectionImplWithAsterisk(objIntercepter));
+		// set target pairs to intercepter
+		objIntercepter.setIntercepter(targets);
 		
 		SocketIOInbound proxyObj = (SocketIOInbound) Proxy.newProxyInstance(
 			SocketIOInbound.class.getClassLoader(),
