@@ -404,12 +404,13 @@ class DefaultSession implements SocketIOSession {
 							if (message.startsWith("\"")) {
 								message = message.substring(1,
 										message.length() - 1);
-								// checking authed event-name
-								for (String b : inbound.setEventnames()) {
-									if (strKey.equals(b))
-										inbound.onMessage(strKey, message);
-								}
 							}
+							// checking authed event-name
+							for (String b : inbound.setEventnames()) {
+								if (strKey.equals(b))
+									inbound.onMessage(strKey, message);
+							}
+							//
 							if (LOGGER.isLoggable(Level.FINE))
 								LOGGER.log(Level.FINE, "Session[" + sessionId
 										+ "]: matcher got (" + strKey + ","
@@ -425,6 +426,7 @@ class DefaultSession implements SocketIOSession {
 							LOGGER.log(Level.FINE, "Session[" + sessionId
 									+ "]: matcher got an exception (" + strKey
 									+ "," + message + ")");
+						e.printStackTrace();
 					}
 				} catch (Throwable e) {
 					if (LOGGER.isLoggable(Level.WARNING))
@@ -434,6 +436,7 @@ class DefaultSession implements SocketIOSession {
 										+ sessionId
 										+ "]: Exception thrown by SocketIOInbound.onMessage()",
 								e);
+					e.printStackTrace();
 				}
 			}
 		}else{
