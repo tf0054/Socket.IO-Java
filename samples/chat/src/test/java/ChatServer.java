@@ -37,11 +37,17 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.nio.SelectChannelConnector;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import com.glines.socketio.server.transport.FlashSocketTransport;
 
 public class ChatServer {
-	private static class StaticServlet extends HttpServlet {
+    private static final Logger LOGGER = Logger.getLogger(ChatServer.class.getName());
+
+    private static class StaticServlet extends HttpServlet {
+		private static final long serialVersionUID = 1L;
+
 		@Override
 		protected void doGet(HttpServletRequest req, HttpServletResponse resp)
 				throws ServletException, IOException {

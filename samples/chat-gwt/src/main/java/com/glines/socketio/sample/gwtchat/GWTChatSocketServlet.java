@@ -25,12 +25,9 @@
 package com.glines.socketio.sample.gwtchat;
 
 import com.glines.socketio.common.DisconnectReason;
-import com.glines.socketio.common.SocketIOException;
-import com.glines.socketio.server.SocketIOFrame;
 import com.glines.socketio.server.SocketIOInbound;
 import com.glines.socketio.server.SocketIOOutbound;
 import com.glines.socketio.server.SocketIOServlet;
-import com.google.gson.Gson;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
@@ -40,6 +37,7 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class GWTChatSocketServlet extends SocketIOServlet {
@@ -47,7 +45,7 @@ public class GWTChatSocketServlet extends SocketIOServlet {
     private AtomicInteger ids = new AtomicInteger(1);
     private Queue<GWTChatConnection> connections = new ConcurrentLinkedQueue<GWTChatConnection>();
 
-	private Logger logger = Logger.getLogger(this.getClass().getName());
+	private Logger LOGGER = Logger.getLogger(this.getClass().getName());
 
     private class GWTChatConnection implements SocketIOInbound {
         private volatile SocketIOOutbound outbound = null;
@@ -67,8 +65,8 @@ public class GWTChatSocketServlet extends SocketIOServlet {
 			for (Iterator<String> iter = set.iterator(); iter.hasNext();) {
 				strKey = (String) iter.next();
 				//if(strKey.startsWith("Cookie") || strKey.startsWith("address"))
-					logger.info("Server.handshake: '" + strKey + "','"
-							+ (String) objHandshake.get(strKey) + "'");
+				LOGGER.info("Server.handshake: '" + strKey + "','"
+						+ (String) objHandshake.get(strKey) + "'");
 			}
         }
 
@@ -83,7 +81,7 @@ public class GWTChatSocketServlet extends SocketIOServlet {
         // v0.7- style - always used.
         public void onMessage(String strKey, String message) {
         	if(strKey.equals("message")){
-	        	logger.info("Server.onMessage: '"+strKey+"','"+message+"'");
+        		LOGGER.info("Server.onMessage: '"+strKey+"','"+message+"'");
 	        	
 	            if (message.equals("/rclose")) {
 	                outbound.close();
@@ -143,6 +141,12 @@ public class GWTChatSocketServlet extends SocketIOServlet {
         public String[] setEventnames() {
         	return new String[]{"message"};
         }
+
+		@Override
+		public void setNamespace(String a) {
+            if (LOGGER.isLoggable(Level.FINE))
+                LOGGER.fine("No namespace with this servlet.");
+		}
 
     }
     

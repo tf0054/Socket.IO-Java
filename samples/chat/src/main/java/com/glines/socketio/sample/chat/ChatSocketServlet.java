@@ -25,31 +25,32 @@
 package com.glines.socketio.sample.chat;
 
 import com.glines.socketio.common.DisconnectReason;
-import com.glines.socketio.common.SocketIOException;
-import com.glines.socketio.server.SocketIOFrame;
 import com.glines.socketio.server.SocketIOInbound;
 import com.glines.socketio.server.SocketIOOutbound;
 import com.glines.socketio.server.SocketIOServlet;
-import com.glines.socketio.util.JdkOverLog4j;
+//import com.glines.socketio.util.JdkOverLog4j;
 import com.google.gson.Gson;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
-import java.util.Collections;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class ChatSocketServlet extends SocketIOServlet {
     private static final long serialVersionUID = 1L;
     private AtomicInteger ids = new AtomicInteger(1);
     private Queue<ChatConnection> connections = new ConcurrentLinkedQueue<ChatConnection>();
+    private static final Logger LOGGER = Logger.getLogger(ChatSocketServlet.class.getName());
 
     @Override
     public void init(ServletConfig config) throws ServletException {
-        JdkOverLog4j.install();
+        //JdkOverLog4j.install();
         super.init(config);
     }
 
@@ -163,6 +164,12 @@ public class ChatSocketServlet extends SocketIOServlet {
 		@Override
 		public String[] setEventnames() {
         	return new String[]{"message","announcement","welcome"};
+		}
+
+		@Override
+		public void setNamespace(String a) {
+            if (LOGGER.isLoggable(Level.FINE))
+                LOGGER.fine("No namespace with this servlet.");
 		}
     }
 
