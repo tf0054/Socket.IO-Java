@@ -13,7 +13,14 @@ $(function () {
       
   // connect to remote socket server for live updates
   var socket = io.connect('http://localhost');
-      
+  
+  socket.on('connect', function (data) {
+	  $('#message').text("Connected.");
+  });
+  socket.on('disconnect', function (data) {
+	  $('#message').text("disConnected.");
+  });
+
   // listen to incoming events from the server
   socket.on('updatePointer', function (data) {
     if (clientId != data.clientId) {

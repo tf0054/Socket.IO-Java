@@ -42,7 +42,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class Intercepter implements InvocationHandler{
-	private String strNamespace = "";
+	private String strNamespace = "/";
 	private HashMap<String, Object> targets = new HashMap<String, Object>();
 	
 	//private HashMap<String, Queue> connections = new HashMap<String, Queue>();
@@ -62,12 +62,12 @@ public class Intercepter implements InvocationHandler{
 	public Object invoke(Object arg0, Method method, Object[] arg2) throws Throwable {
 		Object ret = null;
 		if(method.getName().equals("onConnect")){
-			//we have to hand the outbound over to each classes. with this both can handle the next message.
+			//we have to hand the outbound over to all classes. with this both can handle the next message.
     		for (Object target :targets.values()) {
     			method.invoke(target, arg2);
     		}
           if (LOGGER.isLoggable(Level.FINE))
-          LOGGER.log(Level.FINE, method.getName()+": strNamespace = "+strNamespace+" - "+ ids.getAndIncrement());
+          LOGGER.log(Level.FINE, method.getName()+": strNamespace = "+strNamespace+" - "+arg2[0]+" - "+ ids.getAndIncrement());
 		} else if(method.getName().equals("disConnect")){
 			if(strNamespace.length() != 0){
 				ret = method.invoke(targets.get(strNamespace), arg2);

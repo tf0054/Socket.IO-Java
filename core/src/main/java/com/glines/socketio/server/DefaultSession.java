@@ -216,17 +216,18 @@ class DefaultSession implements SocketIOSession {
 
     @Override
     public void onMessage(SocketIOFrame message) {
-        //LOGGER.log(Level.INFO, "Session[" + sessionId + "] with state = "+state+" on "+ this.toString());
+        // this method is for frames flows in websockets (this is defferent one with tcp's onConnect)
     	String strData = message.getData();
         switch (message.getFrameType()) {
             case CONNECT:
-            	// TODO never used?
-                //onPing(strData);
-                String strTmp = strData.substring(strData.lastIndexOf(":")+1);
+            	// this method is called when using namespace(1::(not called), 1::/chat(called!))
+                String strTmp = strData.substring(strData.lastIndexOf(":") + 1);
+            	// for sending
+            	handler.setNamespace(strTmp);
                 if(strTmp.length() == 0)
                 	strTmp = "/";
+                // for receiving
             	inbound.setNamespace(strTmp);
-            	handler.setNamespace(strTmp);
                 if (LOGGER.isLoggable(Level.FINE))
                     LOGGER.log(Level.FINE, "Session[" + sessionId + "]: getNamespace: " + strTmp);
                 
@@ -376,17 +377,14 @@ class DefaultSession implements SocketIOSession {
 					LOGGER.log(Level.FINE, "Session[" + sessionId
 							+ "]: message header is \"1:\" (" + message + ")");
 			case 3: // SocketIOFrame.FrameType.MESSAGE.value():
-			case 4: // SocketIOFrame.FrameType.JSON_MESSAGE.value():
 				if (LOGGER.isLoggable(Level.FINE))
 					LOGGER.log(Level.FINE, "Session[" + sessionId
 							+ "]: message header is \"3:\" (" + message + ")");
+			case 4: // SocketIOFrame.FrameType.JSON_MESSAGE.value():
 				// i don't know how to send messages with "4:" header 
 				inbound.onMessage("message", message);
 				break;
 			case 5: // SocketIOFrame.FrameType.EVENT.value()
-				if (LOGGER.isLoggable(Level.FINE))
-					LOGGER.log(Level.FINE, "Session[" + sessionId
-							+ "]: message header is \"5:\" (" + message + ")");
 				try {
 					// try calling new-style method (all call will be treated as
 					// json).
