@@ -2,7 +2,7 @@
  * The MIT License
  * Copyright (c) 2012 Takeshi NAKANO
  *
- * Contributors: -
+ * Contributors: Ovea.com, Mycila.com
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,17 +22,19 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-import org.testatoo.container.ContainerRunner;
+package com.glines.socketio.sample.pointers;
 
-/**
- * Just run this class and go to http://127.0.0.1:8080/
- *
- * @author Mathieu Carbou
- */
-public final class StartSamplePointers {
-    public static void main(String... args) throws Exception {
-        // ContainerRunner could be directly run from a launcher with argument.
-        // See ContainerRunner --help foe help
-        ContainerRunner.main("-container", "jetty");
+public class Pojo {
+    public int x = 1;
+    public int y = 2;
+    public String clientId = "x";
+    
+    Pojo(){
     }
+    
+    Pojo(String c, int x, int y){
+    	this.x=x; this.y = y; this.clientId = c;
+    }
+    	
 }
+

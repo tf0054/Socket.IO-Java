@@ -2,7 +2,7 @@
  * The MIT License
  * Copyright (c) 2010 Tad Glines
  *
- * Contributors: Ovea.com, Mycila.com
+ * Contributors: -
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,8 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-import com.glines.socketio.sample.echo.PointersShareServlet;
-import com.glines.socketio.server.SocketIOConfig;
+import com.glines.socketio.sample.pointers.PointersShareServlet;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.nio.SelectChannelConnector;
 import org.eclipse.jetty.servlet.ServletContextHandler;

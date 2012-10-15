@@ -1,6 +1,6 @@
 /**
  * The MIT License
- * Copyright (c) 2010 Tad Glines
+ * Copyright (c) 2012 Takeshi NAKANO
  *
  * Contributors: Ovea.com, Mycila.com
  *
@@ -22,7 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.glines.socketio.sample.echo;
+package com.glines.socketio.sample.pointers;
 
 import java.io.IOException;
 import java.util.HashMap;

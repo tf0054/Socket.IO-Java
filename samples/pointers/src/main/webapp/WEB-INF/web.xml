@@ -31,7 +31,7 @@
 
     <servlet>
         <servlet-name>PointersShareServlet</servlet-name>
-        <servlet-class>com.glines.socketio.sample.echo.PointersShareServlet</servlet-class>
+        <servlet-class>com.glines.socketio.sample.pointers.PointersShareServlet</servlet-class>
     </servlet>
 
     <servlet-mapping>
