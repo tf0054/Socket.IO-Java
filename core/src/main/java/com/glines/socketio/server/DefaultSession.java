@@ -223,12 +223,13 @@ class DefaultSession implements SocketIOSession {
             	// TODO never used?
                 //onPing(strData);
                 String strTmp = strData.substring(strData.lastIndexOf(":")+1);
-                if(strTmp.length() > 0){
-                	inbound.setNamespace(strTmp);
-                	handler.setNamespace(strTmp);
-                    if (LOGGER.isLoggable(Level.FINE))
-                        LOGGER.log(Level.FINE, "Session[" + sessionId + "]: getNamespace: " + strTmp);
-                }
+                if(strTmp.length() == 0)
+                	strTmp = "/";
+            	inbound.setNamespace(strTmp);
+            	handler.setNamespace(strTmp);
+                if (LOGGER.isLoggable(Level.FINE))
+                    LOGGER.log(Level.FINE, "Session[" + sessionId + "]: getNamespace: " + strTmp);
+                
             	onConnect("");
                 if (LOGGER.isLoggable(Level.FINE))
                     LOGGER.log(Level.FINE, "Session[" + sessionId + "]: CONNECT: " + message.getData());

@@ -45,7 +45,7 @@ public class PointersShareServlet extends SocketIOServlet {
 	private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = Logger.getLogger(JettyWebSocketTransportHandler.class.getName());
 
-    private Queue<PointersConnectionImpl> connections = new ConcurrentLinkedQueue<PointersConnectionImpl>();
+    //private Queue<PointersConnectionImpl> connections = new ConcurrentLinkedQueue<PointersConnectionImpl>();
 
 	private class PointersConnectionImpl implements SocketIOInbound {
 		private volatile SocketIOOutbound outbound = null;
@@ -60,11 +60,11 @@ public class PointersShareServlet extends SocketIOServlet {
 		@Override
 		public void onConnect(SocketIOOutbound outbound) {
 			this.outbound = outbound;
-			connections.offer(this);
+			objIntercepter.clients.offer(outbound);
 			for (String a : hashCache.keySet()) {
 				Pojo b = new Pojo(a, hashCache.get(a)[0], hashCache.get(a)[1]);
 				String strJson = gson.toJson(b);
-				emit("updatePointer", strJson);
+				objIntercepter.emit(this.outbound, "updatePointer", strJson);
 			}
 		}
 	
@@ -73,11 +73,11 @@ public class PointersShareServlet extends SocketIOServlet {
         	    Pojo after = gson.fromJson(message, Pojo.class);
         	    int[] intTmp = {after.x, after.y};
         	    hashCache.put(after.clientId, intTmp);
-        	    broadcast("updatePointer", message);
+        	    objIntercepter.broadcast(this.outbound, "updatePointer", message);
         	} else if(strKey.equals("clearPointer")){
         	    Pojo after = gson.fromJson(message, Pojo.class);
         	    hashCache.remove(after.clientId);
-        	    broadcast("clearPointer", message);
+        	    objIntercepter.broadcast(this.outbound, "clearPointer", message);
         	} else{
                 if (LOGGER.isLoggable(Level.FINE))
                     LOGGER.log(Level.FINE, this + "cannot parse with gson: "+message);
@@ -86,42 +86,17 @@ public class PointersShareServlet extends SocketIOServlet {
 		
 		@Override
 		public void onDisconnect(DisconnectReason reason, String errorMessage) {
+			objIntercepter.clients.remove(outbound);
 			this.outbound = null;
-			connections.remove(this);
 		}
-
-		//@Override
-        private void emit(String strKey, String message) {
-            try {
-            	outbound.emitMessage(strKey, message);
-            } catch (Exception e) {
-                outbound.disconnect();
-            	e.printStackTrace();
-            }
-        }
-        
-        private void broadcast(String strKey, String message) {
-            if (LOGGER.isLoggable(Level.FINE))
-                LOGGER.log(Level.FINE, this + " broadcasted to "+connections.size()+" clients");
-
-            for (PointersConnectionImpl c : connections) {
-                if (c != this) {
-                    try {
-                    	c.outbound.emitMessage(strKey, message);
-                    } catch (IOException e) {
-                        c.outbound.disconnect();
-                    }
-                }
-            }
-        }
-        
+                
         @Override
         public String[] setEventnames() {
         	return new String[]{"updatePointer", "clearPointer"};
         }
 
         public void setNamespace(String a) {
-        		objIntercepter.setNamespace(a);
+        	objIntercepter.setNamespace(a);
         }
 	}
 
