@@ -216,11 +216,13 @@ class DefaultSession implements SocketIOSession {
 
     @Override
     public void onMessage(SocketIOFrame message) {
-        // this method is for frames flows in websockets (this is defferent one with tcp's onConnect)
+        // this method is for frames flows in websocket (this is defferent one with tcp's onConnect)
     	String strData = message.getData();
+        if (LOGGER.isLoggable(Level.FINE))
+            LOGGER.log(Level.FINE, "Session[" + sessionId + "]: "+message.getFrameType()+": " + message.getData());
         switch (message.getFrameType()) {
             case CONNECT:
-            	// this method is called when using namespace(1::(not called), 1::/chat(called!))
+            	// this method is called = browser sends 1::/chat only if using namespace
                 String strTmp = strData.substring(strData.lastIndexOf(":") + 1);
             	// for sending
             	handler.setNamespace(strTmp);
@@ -228,37 +230,23 @@ class DefaultSession implements SocketIOSession {
                 	strTmp = "/";
                 // for receiving
             	inbound.setNamespace(strTmp);
-                if (LOGGER.isLoggable(Level.FINE))
-                    LOGGER.log(Level.FINE, "Session[" + sessionId + "]: getNamespace: " + strTmp);
-                
             	onConnect("");
-                if (LOGGER.isLoggable(Level.FINE))
-                    LOGGER.log(Level.FINE, "Session[" + sessionId + "]: CONNECT: " + message.getData());
+                break;
             case HEARTBEAT:
                 // Ignore this message type as they are only intended to be from server to client.
-                if (LOGGER.isLoggable(Level.FINE))
-                    LOGGER.log(Level.FINE, "Session[" + sessionId + "]: HEARTBEAT: " + message.getData());
                 onPong("");
                 startHeartbeatTimer();
                 break;
             case CLOSE:
-                if (LOGGER.isLoggable(Level.FINE))
-                    LOGGER.log(Level.FINE, "Session[" + sessionId + "]: CLOSE: " + message.getData());
                 onClose(message.getData());
                 break;
             case MESSAGE:
-                if (LOGGER.isLoggable(Level.FINE))
-                    LOGGER.log(Level.FINE, "Session[" + sessionId + "]: MESSAGE: " + message.getData());
                 onMessage(message.getFrameType().value(), message.getData());
                 break;
             case JSON_MESSAGE:
-                if (LOGGER.isLoggable(Level.FINE))
-                    LOGGER.log(Level.FINE, "Session[" + sessionId + "]: JSON: " + message.getData());
                 onMessage(message.getFrameType().value(), message.getData());
                 break;
             case EVENT:
-                if (LOGGER.isLoggable(Level.FINE))
-                    LOGGER.log(Level.FINE, "Session[" + sessionId + "]: EVENT: " + message.getData());
                 onMessage(message.getFrameType().value(), message.getData());
                 break;
             default:

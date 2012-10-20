@@ -50,6 +50,8 @@ public class Intercepter implements InvocationHandler{
 
 	private static final Logger LOGGER = Logger.getLogger(JettyWebSocketTransportHandler.class.getName());
     private AtomicInteger ids = new AtomicInteger(1);
+    
+    private SocketIOOutbound objOutboundTmp = null;
 
 	public void setIntercepter(HashMap<String, Object> objects){
 		this.targets = objects;
@@ -57,6 +59,10 @@ public class Intercepter implements InvocationHandler{
 	
 	public void setNamespace(String a){
 		strNamespace = a;
+		if(objOutboundTmp != null){
+	          if (LOGGER.isLoggable(Level.FINE))
+	        	  LOGGER.log(Level.FINE, "setting connctions can be done: "+targets.get(strNamespace));
+		}
 	}
 	
 	public Object invoke(Object arg0, Method method, Object[] arg2) throws Throwable {
@@ -66,8 +72,9 @@ public class Intercepter implements InvocationHandler{
     		for (Object target :targets.values()) {
     			method.invoke(target, arg2);
     		}
+    		//objOutboundTmp = (SocketIOOutbound) targets.get(strNamespace);
           if (LOGGER.isLoggable(Level.FINE))
-          LOGGER.log(Level.FINE, method.getName()+": strNamespace = "+strNamespace+" - "+arg2[0]+" - "+ ids.getAndIncrement());
+        	  LOGGER.log(Level.FINE, method.getName()+": strNamespace = "+strNamespace+" - "+arg2[0]+" - "+ ids.getAndIncrement());
 		} else if(method.getName().equals("disConnect")){
 			if(strNamespace.length() != 0){
 				ret = method.invoke(targets.get(strNamespace), arg2);

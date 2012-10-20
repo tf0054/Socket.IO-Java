@@ -50,6 +50,7 @@ public class EchoSocketServlet extends SocketIOServlet {
 
 		@Override
 		public void onConnect(SocketIOOutbound outbound) {
+			// this method is called when tcp connection is established.
 			this.outbound = outbound;
 		}
 

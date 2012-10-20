@@ -84,13 +84,24 @@ public abstract class AbstractHttpTransport extends AbstractTransport {
         if (inbound != null) {
             if (sessionId == null)
                 sessionId = request.getSession().getId().toString();
+            //
 			Enumeration<String> headerNames = request.getHeaderNames();
 			LinkedHashMap<String,String> objHandshake = new LinkedHashMap<String,String>();
 			while (headerNames.hasMoreElements()) {
 				String headerName = (String) headerNames.nextElement();
 				objHandshake.put(headerName, request.getHeader(headerName));
 			}
+			objHandshake.put("address", request.getRemoteAddr());
+			objHandshake.put("port", Integer.toString(request.getRemotePort()));
+			objHandshake.put("url", request.getRequestURI());
+			String strTmp = request.getQueryString();
+			if(strTmp != null)
+				objHandshake.put("query", strTmp);
+			else
+				objHandshake.put("query", "");
+			//
             SocketIOSession session = sessionFactory.createSession(inbound, sessionId,objHandshake);
+			objHandshake.put("session", session.getSessionId());
             // get and init data handler
             DataHandler dataHandler = newDataHandler(session);
             dataHandler.init(getConfig());

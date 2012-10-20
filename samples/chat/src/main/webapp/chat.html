@@ -101,8 +101,10 @@
 			message(msg);
       });
       socket.on('connect', function(reason, error){
+    	  // show comment block
           document.getElementById('form').style.display='block';
           document.getElementById('chat').innerHTML = '';
+          addLine('Connected.');
       });
       socket.on('disconnect', function(reason, error){
     	  addLine('<b>Disconnected['+drname(reason)+']: '+error+'</b>');

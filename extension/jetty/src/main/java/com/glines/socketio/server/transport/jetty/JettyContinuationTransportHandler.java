@@ -51,7 +51,7 @@ import java.util.logging.Logger;
 /**
  * @author Mathieu Carbou
  */
-@Handle({TransportType.HTML_FILE, TransportType.JSONP_POLLING, TransportType.XHR_MULTIPART, TransportType.XHR_POLLING})
+@Handle({TransportType.HTML_FILE, TransportType.JSONP_POLLING, TransportType.XHR_POLLING})
 public final class JettyContinuationTransportHandler extends AbstractTransportHandler implements ContinuationListener, ConnectableTransportHandler {
 
     /**
@@ -88,6 +88,8 @@ public final class JettyContinuationTransportHandler extends AbstractTransportHa
     private int maxIdleTime;
     private DataHandler dataHandler;
     private long continuationTimeout;
+    
+    private String endpoint = "";
 
     @Override
     public void setDataHandler(DataHandler dataHandler) {
@@ -137,11 +139,11 @@ public final class JettyContinuationTransportHandler extends AbstractTransportHa
     @Override
     public void sendMessage(SocketIOFrame frame) throws SocketIOException {
         if (LOGGER.isLoggable(Level.FINE))
-            LOGGER.log(Level.FINE, "Session[" + getSession().getSessionId() + "]: " + "sendMessage(frame): [" + frame.getFrameType() + "]: " + frame.getData());
+            LOGGER.log(Level.FINE, "Session[" + getSession().getSessionId() + "]: " + "sendMessage(frame): [" + frame.getFrameType() + "]: '" + frame.getData() + "' using " + dataHandler.toString());
         if (is_open) {
             if (continuation != null) {
                 List<String> messages = buffer.drainMessages();
-                messages.add(frame.encode());
+                messages.add(frame.encode(endpoint));
                 StringBuilder data = new StringBuilder();
                 for (String msg : messages) {
                     data.append(msg);
@@ -159,7 +161,7 @@ public final class JettyContinuationTransportHandler extends AbstractTransportHa
                     getSession().startHeartbeatTimer();
                 }
             } else {
-                String data = frame.encode();
+                String data = frame.encode(endpoint);
                 if (!buffer.putMessage(data, maxIdleTime)) {
                     getSession().onDisconnect(DisconnectReason.TIMEOUT);
                     abort();
@@ -452,14 +454,12 @@ public final class JettyContinuationTransportHandler extends AbstractTransportHa
     }
 
 	@Override
-	public LinkedHashMap<String, String> getHandshake() {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    public LinkedHashMap<String,String> getHandshake(){
+    	return getSession().getHandshake();
+    }
 
 	@Override
 	public void setNamespace(String a) {
-		// TODO Auto-generated method stub
-		
+		endpoint = a;
 	}
 }

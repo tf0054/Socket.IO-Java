@@ -43,7 +43,7 @@ import java.util.logging.Logger;
 /**
  * @author Mathieu Carbou
  */
-@Handle({TransportType.WEB_SOCKET, TransportType.FLASH_SOCKET})
+@Handle({TransportType.WEB_SOCKET})
 public final class JettyWebSocketTransportHandler extends AbstractTransportHandler implements WebSocket.OnTextMessage, WebSocket.OnBinaryMessage {
 
     private static final long DEFAULT_HEARTBEAT_DELAY = SocketIOConfig.DEFAULT_MAX_IDLE / 2;
@@ -115,10 +115,6 @@ public final class JettyWebSocketTransportHandler extends AbstractTransportHandl
         return getSession().getConnectionState();
     }
 
-    public LinkedHashMap<String,String> getHandshake(){
-    	return getSession().getHandshake();
-    }
-    
     @Override
     public void sendMessage(SocketIOFrame frame) throws SocketIOException {
         if (outbound.isOpen()) {
@@ -177,6 +173,11 @@ public final class JettyWebSocketTransportHandler extends AbstractTransportHandl
             outbound = null;
         }
         getSession().onShutdown();
+    }
+
+    @Override
+    public LinkedHashMap<String,String> getHandshake(){
+    	return getSession().getHandshake();
     }
 
 	@Override
