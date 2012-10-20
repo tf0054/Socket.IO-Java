@@ -7,7 +7,8 @@
   // store the callback functions
   var updatePointerCallback;
   var clearPointerCallback;
-
+  var puffPointerCallback;
+  
   // track a mouse movment
   this.track = function (x, y) {
     var submit = false;
@@ -35,6 +36,13 @@
     }
   }
   
+  //
+  this.click = function () {
+    if (puffPointerCallback) {
+      puffPointerCallback();
+    }
+  }
+  
   // set the update pointer callback function
   this.updatePointer = function(callback) {
     updatePointerCallback = callback;
@@ -43,5 +51,9 @@
   // set the clear pointer callback function
   this.clearPointer = function(callback) {
     clearPointerCallback = callback;
+  }
+
+  this.puffPointer = function(callback) {
+    puffPointerCallback = callback;
   }
 }

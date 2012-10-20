@@ -19,6 +19,12 @@
     }
   });
 
+  element.click(function (e) {
+    if (tracker) {
+      tracker.click();
+    }
+  });
+  
   // attach a mouse tracker object
   this.attachTracker = function(t) {
     tracker = t;
@@ -42,6 +48,14 @@
     // position the pointer
     pointer.css('left', left + x);
     pointer.css('top', top + y);
+  }
+  
+  // puff pointer 
+  this.puffPointer = function(clientId) {
+	    var pointer = $('#' + getPointerElementId(clientId));
+	    pointer.hide('puff', '', 300, function (e) {
+	    		pointer.show();
+	        });
   }
 	
   // remove pointer 

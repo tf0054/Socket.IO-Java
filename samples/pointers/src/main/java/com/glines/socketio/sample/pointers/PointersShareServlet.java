@@ -78,6 +78,8 @@ public class PointersShareServlet extends SocketIOServlet {
         	    Pojo after = gson.fromJson(message, Pojo.class);
         	    hashCache.remove(after.clientId);
         	    objIntercepter.broadcast(this.outbound, "clearPointer", message);
+        	} else if(strKey.equals("puffPointer")){
+        	    objIntercepter.broadcast(this.outbound, "puffPointer", message);
         	} else{
                 if (LOGGER.isLoggable(Level.FINE))
                     LOGGER.log(Level.FINE, this + "cannot parse with gson: "+message);
@@ -92,7 +94,7 @@ public class PointersShareServlet extends SocketIOServlet {
                 
         @Override
         public String[] setEventnames() {
-        	return new String[]{"updatePointer", "clearPointer"};
+        	return new String[]{"updatePointer", "clearPointer", "puffPointer"};
         }
 
         public void setNamespace(String a) {

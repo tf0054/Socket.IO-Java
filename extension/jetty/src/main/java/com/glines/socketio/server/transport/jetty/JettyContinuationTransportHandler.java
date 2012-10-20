@@ -184,7 +184,13 @@ public final class JettyContinuationTransportHandler extends AbstractTransportHa
     public void emitMessage(String strKey, String message) throws SocketIOException {
         if (LOGGER.isLoggable(Level.FINE))
             LOGGER.log(Level.FINE, "Session[" + getSession().getSessionId() + "]: " + "emitMessage(String): " + message);
-        sendMessage(SocketIOFrame.JSON_MESSAGE_TYPE, "{\""+strKey+"\":\""+message+"\"}");
+		if(message.startsWith("{") || message.startsWith("[")){
+			sendMessage(SocketIOFrame.JSON_MESSAGE_TYPE,
+					"{\"name\":\""+strKey+"\",\"args\":["+message+"]}");
+		}else{
+			sendMessage(SocketIOFrame.JSON_MESSAGE_TYPE,
+					"{\"name\":\""+strKey+"\",\"args\":[\""+message+"\"]}");	
+		}
     }
 
     @Override
@@ -192,11 +198,20 @@ public final class JettyContinuationTransportHandler extends AbstractTransportHa
         if (LOGGER.isLoggable(Level.FINE))
             LOGGER.log(Level.FINE, "Session[" + getSession().getSessionId() + "]: " + "sendMessage(int, String): [" + messageType + "]: " + message);
         if (is_open && getSession().getConnectionState() == ConnectionState.CONNECTED) {
-            sendMessage(new SocketIOFrame(messageType == SocketIOFrame.TEXT_MESSAGE_TYPE ?
-                              SocketIOFrame.FrameType.MESSAGE :
-                              SocketIOFrame.FrameType.JSON_MESSAGE,
+        	if(messageType == SocketIOFrame.TEXT_MESSAGE_TYPE){
+                sendMessage(new SocketIOFrame(
+	        				SocketIOFrame.FrameType.MESSAGE,
+                        messageType, message));        		
+        	} else if(message.startsWith("{\"name\":")){
+		        sendMessage(new SocketIOFrame(
+		        			SocketIOFrame.FrameType.EVENT,
+	                    messageType, message));
+        	}else{
+		        sendMessage(new SocketIOFrame(
+                        	SocketIOFrame.FrameType.JSON_MESSAGE,
                         messageType, message));
-        } else {
+        	}
+    	} else {
             throw new SocketIOClosedException();
         }
     }

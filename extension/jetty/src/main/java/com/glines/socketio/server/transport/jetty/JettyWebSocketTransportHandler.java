@@ -151,11 +151,19 @@ public final class JettyWebSocketTransportHandler extends AbstractTransportHandl
     public void sendMessage(int messageType, String message)
             throws SocketIOException {
         if (outbound.isOpen() && getSession().getConnectionState() == ConnectionState.CONNECTED) {
-            sendMessage(new SocketIOFrame(
-                        messageType == SocketIOFrame.TEXT_MESSAGE_TYPE ?
-                                SocketIOFrame.FrameType.MESSAGE :
-                                SocketIOFrame.FrameType.EVENT,
+        	if(messageType == SocketIOFrame.TEXT_MESSAGE_TYPE){
+                sendMessage(new SocketIOFrame(
+	        				SocketIOFrame.FrameType.MESSAGE,
+                        messageType, message));        		
+        	} else if(message.startsWith("{\"name\":")){
+		        sendMessage(new SocketIOFrame(
+		        			SocketIOFrame.FrameType.EVENT,
+	                    messageType, message));
+        	}else{
+		        sendMessage(new SocketIOFrame(
+                        	SocketIOFrame.FrameType.JSON_MESSAGE,
                         messageType, message));
+        	}
         } else {
             throw new SocketIOClosedException();
         }
