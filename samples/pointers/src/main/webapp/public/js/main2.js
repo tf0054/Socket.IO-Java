@@ -13,7 +13,7 @@ $(function () {
   sharedSurface.attachTracker(tracker);
       
   // connect to remote socket server for live updates
-  var socket = io.connect('http://localhost:8080');
+  var socket = io.connect('http://localhost:8080/pointers');
   
   socket.on('connect', function (data) {
 	  $('#message').text("Connected.");

@@ -45,65 +45,75 @@ public class Intercepter implements InvocationHandler{
 	private String strNamespace = "/";
 	private HashMap<String, Object> targets = new HashMap<String, Object>();
 	
-	//private HashMap<String, Queue> connections = new HashMap<String, Queue>();
-	public static Queue<SocketIOOutbound> clients = new ConcurrentLinkedQueue<SocketIOOutbound>();
+	// unique on this class != unique on this vm (because this isn't static class)
+	private static HashMap<String, Queue> connections = new HashMap<String, Queue>();
+	
+	// TODO this should be changed to per instance variable
+	//private static Queue<SocketIOOutbound> clients = new ConcurrentLinkedQueue<SocketIOOutbound>();
 
 	private static final Logger LOGGER = Logger.getLogger(JettyWebSocketTransportHandler.class.getName());
     private AtomicInteger ids = new AtomicInteger(1);
     
+    // unique on this instance 
+    private boolean setClient = false;
     private SocketIOOutbound objOutboundTmp = null;
 
 	public void setIntercepter(HashMap<String, Object> objects){
 		this.targets = objects;
 	}
 	
-	public void setNamespace(String a){
-		strNamespace = a;
-		if(objOutboundTmp != null){
-	          if (LOGGER.isLoggable(Level.FINE))
-	        	  LOGGER.log(Level.FINE, "setting connctions can be done: "+targets.get(strNamespace));
-		}
-	}
-	
 	public Object invoke(Object arg0, Method method, Object[] arg2) throws Throwable {
 		Object ret = null;
 		if(method.getName().equals("onConnect")){
 			//we have to hand the outbound over to all classes. with this both can handle the next message.
+    		if (LOGGER.isLoggable(Level.FINE))
+          	  LOGGER.log(Level.FINE, method.getName()+": namespace = "+strNamespace+" - "+arg2[0]+" - "+ ids.getAndIncrement());
     		for (Object target :targets.values()) {
     			method.invoke(target, arg2);
     		}
-    		//objOutboundTmp = (SocketIOOutbound) targets.get(strNamespace);
-          if (LOGGER.isLoggable(Level.FINE))
-        	  LOGGER.log(Level.FINE, method.getName()+": strNamespace = "+strNamespace+" - "+arg2[0]+" - "+ ids.getAndIncrement());
+    		objOutboundTmp = (SocketIOOutbound) arg2[0];
 		} else if(method.getName().equals("disConnect")){
-			if(strNamespace.length() != 0){
-				ret = method.invoke(targets.get(strNamespace), arg2);
-			} else {
-				// This is for calling setNamespace
-				ret = method.invoke(targets.get("/"), arg2);
-			}
-          if (LOGGER.isLoggable(Level.FINE))
-              LOGGER.log(Level.FINE, method.getName()+": strNamespace = "+strNamespace+" - "+ ids.getAndIncrement());
-//    		if(connections.get(strNamespace).size() > 1){
-//    			connections.get(strNamespace).remove((SocketIOInbound)targets.get(strNamespace));
-//    		}else{
-//	    		connections.remove(strNamespace);
-//    		}
-		} else {
+			ret = method.invoke(targets.get(strNamespace), arg2);
+			if(setClient){
 	          if (LOGGER.isLoggable(Level.FINE))
-	              LOGGER.log(Level.FINE, method.getName()+": strNamespace = "+strNamespace+" - "+ ids.getAndIncrement());
-			if(strNamespace.length() != 0){
-				ret = method.invoke(targets.get(strNamespace), arg2);
-//	    		if(connections.get(strNamespace) != null){
-//	    			connections.get(strNamespace).offer((SocketIOInbound)targets.get(strNamespace));
-//	    		}else{
-//		    		clients.offer((SocketIOInbound)targets.get(strNamespace));
-//		    		connections.put(strNamespace, clients);
-//	    		}
-			} else {
-				// This is for calling setNamespace
-				ret = method.invoke(targets.get("/"), arg2);
+	        	  LOGGER.log(Level.FINE, "connction eas removed: "+strNamespace+" = "+targets.get(strNamespace));
+	          connections.get(strNamespace).remove(objOutboundTmp);
+	          setClient = false;
 			}
+            if (LOGGER.isLoggable(Level.FINE))
+              LOGGER.log(Level.FINE, method.getName()+": namespace = "+strNamespace+" - "+ ids.getAndIncrement());
+		} else if(method.getName().equals("setNamespace")){
+			// useful if this session use namespace.
+			strNamespace = (String) arg2[0];
+			if(!setClient){
+	          if (LOGGER.isLoggable(Level.FINE))
+	        	  LOGGER.log(Level.FINE, "setting connctions can be done: "+strNamespace+" = "+targets.get(strNamespace));
+	          //clients.offer(objOutboundTmp);
+	          if(!connections.containsKey(strNamespace)){
+	        	  connections.put(strNamespace, new ConcurrentLinkedQueue<SocketIOOutbound>());
+	          }
+	          //connections.put(strNamespace, clients);
+	          connections.get(strNamespace).offer(objOutboundTmp);  
+	          setClient = true;
+			}
+		} else if(method.getName().equals("setEventnames")){
+			// useful only if this session does'nt use namespace.
+			ret = method.invoke(targets.get(strNamespace), arg2);			
+			if(!setClient){
+	          if (LOGGER.isLoggable(Level.FINE))
+	        	  LOGGER.log(Level.FINE, "setting connctions can be done: "+strNamespace+" = "+targets.get(strNamespace));
+	          //clients.offer(objOutboundTmp);
+	          if(!connections.containsKey(strNamespace)){
+	        	  connections.put(strNamespace, new ConcurrentLinkedQueue<SocketIOOutbound>());
+	          }
+	          //connections.put(strNamespace, clients);
+	          connections.get(strNamespace).offer(objOutboundTmp);  
+	          setClient = true;
+			}
+		} else {
+	        if (LOGGER.isLoggable(Level.FINE))
+	            LOGGER.log(Level.FINE, method.getName()+": namespace = "+strNamespace+" - "+ ids.getAndIncrement());
+			ret = method.invoke(targets.get(strNamespace), arg2);
 		}
 		return ret;
 	}
@@ -118,23 +128,38 @@ public class Intercepter implements InvocationHandler{
     }
     
     public void broadcast(SocketIOOutbound outbound, String strKey, String message) {
-//        if (LOGGER.isLoggable(Level.FINE))
-//            LOGGER.log(Level.FINE, this + " broadcasted to "+connections.get(strNamespace).size()+" clients");
-//
-//        if(strNamespace.length() == 0)
-//        	strNamespace = "/";
-//        Queue<SocketIOInbound> clients = connections.get(strNamespace);
+    	// own clients can be used here.
+    	Queue<SocketIOOutbound> clients = connections.get(strNamespace);
+    	if (LOGGER.isLoggable(Level.FINE))
+            LOGGER.log(Level.FINE, "broadcasted to "+clients.size()+" clients");
         for (SocketIOOutbound objTmp : clients) {
             if (objTmp != outbound) {
                 try {
                 	objTmp.emitMessage(strKey, message);
-                } catch (IOException e) {
+                } catch (Exception e) {
                 	objTmp.disconnect();
+                	e.printStackTrace();
                 }
             }
         }
     }
 
+    public void dumpClients(){
+    	StringBuilder sb = new StringBuilder();
+    	for(String a: connections.keySet()){
+    		Object[] b = connections.get(a).toArray();
+    		sb.append("the num of total clients for "+a+": "+b.length+"\n");
+        	for (int i = 0; i < b.length; i++){
+        		sb.append("client("+Integer.toString(i)+"): "+b[i].toString()+"\n");
+        	}
+    	}
+    	LOGGER.log(Level.INFO, sb.toString()); 
+    }
+
+    public int getClientsSize(){
+    	return connections.get(strNamespace).size();
+    }
+    
 	public SocketIOInbound getProxyObj(){
 		SocketIOInbound proxyObj = (SocketIOInbound) Proxy.newProxyInstance(
 				SocketIOInbound.class.getClassLoader(),

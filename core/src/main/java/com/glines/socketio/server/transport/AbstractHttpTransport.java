@@ -100,7 +100,7 @@ public abstract class AbstractHttpTransport extends AbstractTransport {
 			else
 				objHandshake.put("query", "");
 			//
-            SocketIOSession session = sessionFactory.createSession(inbound, sessionId,objHandshake);
+            SocketIOSession session = sessionFactory.createSession(inbound, sessionId, objHandshake);
 			objHandshake.put("session", session.getSessionId());
             // get and init data handler
             DataHandler dataHandler = newDataHandler(session);

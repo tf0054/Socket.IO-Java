@@ -98,7 +98,7 @@ public class EventBusServlet extends SocketIOServlet {
             this.outbound = outbound;
             try {
                 send(new JSONObject().put("type", MessageType.ACK));
-            } catch (JSONException e) {
+            } catch (Exception e) {
                 throw new RuntimeException(e.getMessage(), e);
             }
         }
@@ -174,8 +174,8 @@ public class EventBusServlet extends SocketIOServlet {
         void send(JSONObject data) {
             if (outbound != null) {
                 String str = data.toString();
-                if (LOGGER.isLoggable(Level.FINE))
-                    LOGGER.fine("Sending to " + this + " message: " + str);
+//                if (LOGGER.isLoggable(Level.FINE))
+//                    LOGGER.fine("Sending to " + this + " message: " + str);
                 try {
                     outbound.sendMessage(str);
                 } catch (SocketIOException e) {

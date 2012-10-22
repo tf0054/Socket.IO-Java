@@ -45,8 +45,6 @@ public class PointersShareServlet extends SocketIOServlet {
 	private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = Logger.getLogger(JettyWebSocketTransportHandler.class.getName());
 
-    //private Queue<PointersConnectionImpl> connections = new ConcurrentLinkedQueue<PointersConnectionImpl>();
-
 	private class PointersConnectionImpl implements SocketIOInbound {
 		private volatile SocketIOOutbound outbound = null;
 		private Intercepter objIntercepter = null;
@@ -60,7 +58,6 @@ public class PointersShareServlet extends SocketIOServlet {
 		@Override
 		public void onConnect(SocketIOOutbound outbound) {
 			this.outbound = outbound;
-			objIntercepter.clients.offer(outbound);
 			for (String a : hashCache.keySet()) {
 				Pojo b = new Pojo(a, hashCache.get(a)[0], hashCache.get(a)[1]);
 				String strJson = gson.toJson(b);
@@ -80,6 +77,7 @@ public class PointersShareServlet extends SocketIOServlet {
         	    objIntercepter.broadcast(this.outbound, "clearPointer", message);
         	} else if(strKey.equals("puffPointer")){
         	    objIntercepter.broadcast(this.outbound, "puffPointer", message);
+        	    objIntercepter.dumpClients();
         	} else{
                 if (LOGGER.isLoggable(Level.FINE))
                     LOGGER.log(Level.FINE, this + "cannot parse with gson: "+message);
@@ -88,7 +86,6 @@ public class PointersShareServlet extends SocketIOServlet {
 		
 		@Override
 		public void onDisconnect(DisconnectReason reason, String errorMessage) {
-			objIntercepter.clients.remove(outbound);
 			this.outbound = null;
 		}
                 
@@ -98,7 +95,7 @@ public class PointersShareServlet extends SocketIOServlet {
         }
 
         public void setNamespace(String a) {
-        	objIntercepter.setNamespace(a);
+        	//objIntercepter.setNamespace(a);
         }
 	}
 
@@ -109,6 +106,7 @@ public class PointersShareServlet extends SocketIOServlet {
 		// make target pairs (url, object for that)
 		HashMap<String, Object> targets = new HashMap<String, Object>();
 		targets.put("/", new PointersConnectionImpl(objIntercepter));
+		targets.put("/pointers", new PointersConnectionImpl(objIntercepter));
 		
 		// set target pairs to intercepter
 		objIntercepter.setIntercepter(targets);

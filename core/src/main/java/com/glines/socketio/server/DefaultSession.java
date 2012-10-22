@@ -398,10 +398,10 @@ class DefaultSession implements SocketIOSession {
 									inbound.onMessage(strKey, message);
 							}
 							//
-							if (LOGGER.isLoggable(Level.FINE))
-								LOGGER.log(Level.FINE, "Session[" + sessionId
-										+ "]: matcher got (" + strKey + ","
-										+ message + ")");
+//							if (LOGGER.isLoggable(Level.FINE))
+//								LOGGER.log(Level.FINE, "Session[" + sessionId
+//										+ "]: matcher got (" + strKey + ","
+//										+ message + ")");
 						} else {
 							if (LOGGER.isLoggable(Level.FINE))
 								LOGGER.log(Level.FINE, "Session[" + sessionId

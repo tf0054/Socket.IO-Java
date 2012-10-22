@@ -55,15 +55,18 @@
             ACK: 4
         };
 
+        // array items are json objects.
         var queue = [];
         var socket = io.connect('http://localhost:8080',{rememberTransport: false, transports:["websocket"]});
 
         function send(msg) {
             if (socket.socket.connected) {
-                socket.send($.toJSON([msg]));
+                socket.send($.toJSON([msg]), function(data) {
+                	LOG.info('sended: '+data);
+                });
             } else {
                 queue.push(msg);
-                LOG.info('msg was queued: '+msg);
+                LOG.info('msg was queued: '+$.toJSON(msg));
             }
         }
 
@@ -71,9 +74,13 @@
             LOG.info('Connected !');
             if (queue.length > 0) {
                 var q = queue;
-                queue = [];
-                LOG.debug('onConnect - dequeuing: ', $.toJSON(q));
-                socket.send($.toJSON(q));
+                if(q.length > 0){	                	
+                    queue = [];
+	                LOG.debug('onConnect - dequeuing: '+q.length+' objects.');
+	                for (var i = 0; i < q.length; i++){
+	                	send(q[i]);
+	               	}
+                }
             }
         });
 
@@ -97,6 +104,8 @@
             	jQuery('#display').append('Firing JSON data <font color="blue">' + msg.data + '</font> in topic <font color="red">' + msg.topic + '</font></br>');
             }else if(msg.type == MessageType.ACK) {
             	LOG.debug('ACK was received.');
+            }else{
+            	LOG.debug('cannot recognize: '+msg.type);
             }
         });
 
