@@ -64,7 +64,12 @@ public class PointersShareServlet extends SocketIOServlet {
 				objIntercepter.emit(this.outbound, "updatePointer", strJson);
 			}
 		}
-	
+
+		@Override
+		public void onDisconnect(DisconnectReason reason, String errorMessage) {
+			this.outbound = null;
+		}
+
 		public void onMessage(String strKey, String message) {
         	if(strKey.equals("updatePointer")){
         	    Pojo after = gson.fromJson(message, Pojo.class);
@@ -83,12 +88,7 @@ public class PointersShareServlet extends SocketIOServlet {
                     LOGGER.log(Level.FINE, this + "cannot parse with gson: "+message);
         	}
 		}
-		
-		@Override
-		public void onDisconnect(DisconnectReason reason, String errorMessage) {
-			this.outbound = null;
-		}
-                
+		                
         @Override
         public String[] setEventnames() {
         	return new String[]{"updatePointer", "clearPointer", "puffPointer"};

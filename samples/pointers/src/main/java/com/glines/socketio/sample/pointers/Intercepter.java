@@ -43,14 +43,13 @@ import java.util.logging.Logger;
 
 public class Intercepter implements InvocationHandler{
 	private String strNamespace = "/";
+	
+	// SocketIOInbounds
 	private HashMap<String, Object> targets = new HashMap<String, Object>();
 	
-	// unique on this class != unique on this vm (because this isn't static class)
+	// SocketIOOutbounds / unique on this class != unique on this vm (because this isn't static class)
 	private static HashMap<String, Queue> connections = new HashMap<String, Queue>();
 	
-	// TODO this should be changed to per instance variable
-	//private static Queue<SocketIOOutbound> clients = new ConcurrentLinkedQueue<SocketIOOutbound>();
-
 	private static final Logger LOGGER = Logger.getLogger(JettyWebSocketTransportHandler.class.getName());
     private AtomicInteger ids = new AtomicInteger(1);
     
@@ -72,16 +71,14 @@ public class Intercepter implements InvocationHandler{
     			method.invoke(target, arg2);
     		}
     		objOutboundTmp = (SocketIOOutbound) arg2[0];
-		} else if(method.getName().equals("disConnect")){
+		} else if(method.getName().equals("onDisconnect")){
 			ret = method.invoke(targets.get(strNamespace), arg2);
 			if(setClient){
 	          if (LOGGER.isLoggable(Level.FINE))
-	        	  LOGGER.log(Level.FINE, "connction eas removed: "+strNamespace+" = "+targets.get(strNamespace));
+	        	  LOGGER.log(Level.FINE, "connction eas removed: "+objOutboundTmp.toString());
 	          connections.get(strNamespace).remove(objOutboundTmp);
 	          setClient = false;
 			}
-            if (LOGGER.isLoggable(Level.FINE))
-              LOGGER.log(Level.FINE, method.getName()+": namespace = "+strNamespace+" - "+ ids.getAndIncrement());
 		} else if(method.getName().equals("setNamespace")){
 			// useful if this session use namespace.
 			strNamespace = (String) arg2[0];
