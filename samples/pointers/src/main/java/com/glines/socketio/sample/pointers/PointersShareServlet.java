@@ -70,6 +70,7 @@ public class PointersShareServlet extends SocketIOServlet {
 			this.outbound = null;
 		}
 
+		@Override
 		public void onMessage(String strKey, String message) {
         	if(strKey.equals("updatePointer")){
         	    Pojo after = gson.fromJson(message, Pojo.class);
@@ -94,9 +95,9 @@ public class PointersShareServlet extends SocketIOServlet {
         	return new String[]{"updatePointer", "clearPointer", "puffPointer"};
         }
 
-        public void setNamespace(String a) {
-        	//objIntercepter.setNamespace(a);
-        }
+		@Override
+		public void setNamespace(String a) {
+		}
 	}
 
 	@Override

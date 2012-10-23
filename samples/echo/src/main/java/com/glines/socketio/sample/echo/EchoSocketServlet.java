@@ -74,7 +74,7 @@ public class EchoSocketServlet extends SocketIOServlet {
         }
 
         public void setNamespace(String a) {
-        		objIntercepter.setNamespace(a);
+        	//objIntercepter.setNamespace(a);
         }
 	}
 	
@@ -111,7 +111,7 @@ public class EchoSocketServlet extends SocketIOServlet {
         }
         
         public void setNamespace(String a) {
-        		objIntercepter.setNamespace(a);
+        	//objIntercepter.setNamespace(a);
         }
 	}
 

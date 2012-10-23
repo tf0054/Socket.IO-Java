@@ -24,7 +24,6 @@
  */
 package com.glines.socketio.sample.pointers;
 
-import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -44,11 +43,11 @@ import java.util.logging.Logger;
 public class Intercepter implements InvocationHandler{
 	private String strNamespace = "/";
 	
-	// SocketIOInbounds
+	// SocketIOInbounds / targets (coded classed assigned for providing responses)
 	private HashMap<String, Object> targets = new HashMap<String, Object>();
 	
 	// SocketIOOutbounds / unique on this class != unique on this vm (because this isn't static class)
-	private static HashMap<String, Queue> connections = new HashMap<String, Queue>();
+	private static HashMap<String, Queue<SocketIOOutbound>> connections = new HashMap<String, Queue<SocketIOOutbound>>();
 	
 	private static final Logger LOGGER = Logger.getLogger(JettyWebSocketTransportHandler.class.getName());
     private AtomicInteger ids = new AtomicInteger(1);
@@ -66,47 +65,47 @@ public class Intercepter implements InvocationHandler{
 		if(method.getName().equals("onConnect")){
 			//we have to hand the outbound over to all classes. with this both can handle the next message.
     		if (LOGGER.isLoggable(Level.FINE))
-          	  LOGGER.log(Level.FINE, method.getName()+": namespace = "+strNamespace+" - "+arg2[0]+" - "+ ids.getAndIncrement());
+    			LOGGER.log(Level.FINE, method.getName()+": namespace = "+strNamespace+" - "+arg2[0]+" - "+ ids.getAndIncrement());
     		for (Object target :targets.values()) {
     			method.invoke(target, arg2);
     		}
     		objOutboundTmp = (SocketIOOutbound) arg2[0];
+    		
 		} else if(method.getName().equals("onDisconnect")){
 			ret = method.invoke(targets.get(strNamespace), arg2);
 			if(setClient){
-	          if (LOGGER.isLoggable(Level.FINE))
-	        	  LOGGER.log(Level.FINE, "connction eas removed: "+objOutboundTmp.toString());
-	          connections.get(strNamespace).remove(objOutboundTmp);
-	          setClient = false;
+				if (LOGGER.isLoggable(Level.FINE))
+					LOGGER.log(Level.FINE, method.getName()+": connction was removed: "+objOutboundTmp.toString());
+				connections.get(strNamespace).remove(objOutboundTmp);
+				setClient = false;
 			}
+			
 		} else if(method.getName().equals("setNamespace")){
 			// useful if this session use namespace.
 			strNamespace = (String) arg2[0];
 			if(!setClient){
 	          if (LOGGER.isLoggable(Level.FINE))
-	        	  LOGGER.log(Level.FINE, "setting connctions can be done: "+strNamespace+" = "+targets.get(strNamespace));
-	          //clients.offer(objOutboundTmp);
+	        	  LOGGER.log(Level.FINE, method.getName()+": setting connctions can be done: "+strNamespace+" = "+targets.get(strNamespace));
 	          if(!connections.containsKey(strNamespace)){
 	        	  connections.put(strNamespace, new ConcurrentLinkedQueue<SocketIOOutbound>());
 	          }
-	          //connections.put(strNamespace, clients);
 	          connections.get(strNamespace).offer(objOutboundTmp);  
 	          setClient = true;
 			}
+			
 		} else if(method.getName().equals("setEventnames")){
 			// useful only if this session does'nt use namespace.
 			ret = method.invoke(targets.get(strNamespace), arg2);			
 			if(!setClient){
 	          if (LOGGER.isLoggable(Level.FINE))
-	        	  LOGGER.log(Level.FINE, "setting connctions can be done: "+strNamespace+" = "+targets.get(strNamespace));
-	          //clients.offer(objOutboundTmp);
+	        	  LOGGER.log(Level.FINE, method.getName()+": setting connctions can be done: "+strNamespace+" = "+targets.get(strNamespace));
 	          if(!connections.containsKey(strNamespace)){
 	        	  connections.put(strNamespace, new ConcurrentLinkedQueue<SocketIOOutbound>());
 	          }
-	          //connections.put(strNamespace, clients);
 	          connections.get(strNamespace).offer(objOutboundTmp);  
 	          setClient = true;
 			}
+			
 		} else {
 	        if (LOGGER.isLoggable(Level.FINE))
 	            LOGGER.log(Level.FINE, method.getName()+": namespace = "+strNamespace+" - "+ ids.getAndIncrement());

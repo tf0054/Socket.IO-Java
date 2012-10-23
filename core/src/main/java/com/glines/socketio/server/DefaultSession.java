@@ -42,7 +42,7 @@ import java.util.regex.Pattern;
  */
 class DefaultSession implements SocketIOSession {
 
-    private static final int SESSION_ID_LENGTH = 20;
+    //private static final int SESSION_ID_LENGTH = 20;
     private static final Logger LOGGER = Logger.getLogger(DefaultSession.class.getName());
 
     private final SocketIOSessionManager socketIOSessionManager;
