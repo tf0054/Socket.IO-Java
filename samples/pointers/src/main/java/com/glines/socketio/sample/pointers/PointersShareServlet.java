@@ -24,10 +24,7 @@
  */
 package com.glines.socketio.sample.pointers;
 
-import java.io.IOException;
 import java.util.HashMap;
-import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -38,6 +35,7 @@ import com.glines.socketio.server.SocketIOInbound;
 import com.glines.socketio.server.SocketIOOutbound;
 import com.glines.socketio.server.SocketIOServlet;
 import com.glines.socketio.server.transport.jetty.JettyWebSocketTransportHandler;
+import com.glines.socketio.util.Intercepter;
 
 import com.google.gson.Gson;
 

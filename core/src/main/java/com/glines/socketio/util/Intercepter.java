@@ -22,17 +22,15 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.glines.socketio.sample.pointers;
+package com.glines.socketio.util;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.HashMap;
 
-//import com.glines.socketio.sample.pointers.PointersShareServlet.PointersConnectionImpl;
 import com.glines.socketio.server.SocketIOInbound;
 import com.glines.socketio.server.SocketIOOutbound;
-import com.glines.socketio.server.transport.jetty.JettyWebSocketTransportHandler;
 
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -49,7 +47,7 @@ public class Intercepter implements InvocationHandler{
 	// SocketIOOutbounds / unique on this class != unique on this vm (because this isn't static class)
 	private static HashMap<String, Queue<SocketIOOutbound>> connections = new HashMap<String, Queue<SocketIOOutbound>>();
 	
-	private static final Logger LOGGER = Logger.getLogger(JettyWebSocketTransportHandler.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(Intercepter.class.getName());
     private AtomicInteger ids = new AtomicInteger(1);
     
     // unique on this instance 
