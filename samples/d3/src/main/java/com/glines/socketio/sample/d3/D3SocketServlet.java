@@ -22,7 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.glines.socketio.sample.echo;
+package com.glines.socketio.sample.d3;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -36,9 +36,9 @@ import com.glines.socketio.server.SocketIOOutbound;
 import com.glines.socketio.server.SocketIOServlet;
 import com.glines.socketio.util.Intercepter;
 
-public class EchoSocketServlet extends SocketIOServlet {
+public class D3SocketServlet extends SocketIOServlet {
 	private static final long serialVersionUID = 1L;
-    private static final Logger LOGGER = Logger.getLogger(EchoSocketServlet.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(D3SocketServlet.class.getName());
 
 	private class EchoConnectionImpl implements SocketIOInbound {
 		private volatile SocketIOOutbound outbound = null;
@@ -51,6 +51,7 @@ public class EchoSocketServlet extends SocketIOServlet {
 		@Override
 		public void onConnect(SocketIOOutbound outbound) {
 			// this method is called when tcp connection is established.
+			// this method must be returned immediately (without emit or some other methods must not be used here.)
 			this.outbound = outbound;
 		}
 
@@ -61,11 +62,16 @@ public class EchoSocketServlet extends SocketIOServlet {
 
 		@Override
 		public void onMessage(String strKey, String message) {
-            try {
-            	outbound.sendMessage(message);
-            } catch (IOException e) {
-                outbound.disconnect();
-            }
+			int sleepTime = 1;
+			int intLoops = 1000;
+			while(intLoops-- > 0){
+	            try {
+	                Thread.sleep((long) (sleepTime * (Math.random()*1000+10)));
+	            } catch (InterruptedException e) {
+	                // Ignore
+	            }
+	            objIntercepter.emit(this.outbound, "data", Integer.toString(intLoops));
+			}
         }
 
         @Override
@@ -78,43 +84,6 @@ public class EchoSocketServlet extends SocketIOServlet {
         }
 	}
 	
-	private class EchoConnectionImplWithAsterisk implements SocketIOInbound {
-		private volatile SocketIOOutbound outbound = null;
-		private Intercepter objIntercepter = null;
-		
-		EchoConnectionImplWithAsterisk(Intercepter a){
-			this.objIntercepter = a;
-		}
-		
-		@Override
-		public void onConnect(SocketIOOutbound outbound) {
-			this.outbound = outbound;
-		}
-
-		@Override
-		public void onDisconnect(DisconnectReason reason, String errorMessage) {
-				this.outbound = null;
-			}
-
-		@Override
-		public void onMessage(String strKey, String message) {
-            try {
-            	outbound.sendMessage("*** "+message);
-            } catch (IOException e) {
-                outbound.disconnect();
-            }
-        }
-
-        @Override
-        public String[] setEventnames() {
-        	return new String[]{"message"};
-        }
-        
-        public void setNamespace(String a) {
-        	//objIntercepter.setNamespace(a);
-        }
-	}
-
 	@Override
 	protected SocketIOInbound doSocketIOConnect(HttpServletRequest request) {
 		Intercepter objIntercepter = new Intercepter();
@@ -122,7 +91,6 @@ public class EchoSocketServlet extends SocketIOServlet {
 		// make target pairs (url, object for that)
 		HashMap<String, Object> targets = new HashMap<String, Object>();
 		targets.put("/", new EchoConnectionImpl(objIntercepter));
-		targets.put("/chat", new EchoConnectionImplWithAsterisk(objIntercepter));
 		
 		// set target pairs to intercepter
 		objIntercepter.setIntercepter(targets);

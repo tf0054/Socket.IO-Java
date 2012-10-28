@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en" class=" js no-touch">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+</head>
+<body quick-markup_injected="true"><meta charset="utf-8">
+<meta name="viewport" content="width=device-width">
+<title>Socket.io-Java sample app with d3.js</title>
+<!--<Included>CSS Files </Included>-->
+<link rel="stylesheet" href="http://localhost:8080/stylesheets/foundation.css">
+<link rel="stylesheet" href="http://localhost:8080/stylesheets/app.css">
+<!--[if lt IE 9]>
+<link rel="stylesheet" href="stylesheets/ie.css">
+<![endif]--><!--<IE>Fix for HTML5 Tags </IE>--><!--[if lt IE 9]>
+<script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+<![endif]-->
+<!--<Included>JS Files</Included>-->
+<script src="/socket.io/socket.io.js"></script>
+<script type="text/javascript" src="http://code.jquery.com/jquery-latest.js"></script>
+<script type="text/javascript" src="./graph/modernizr.foundation.js"></script>
+<script type="text/javascript" src="./graph/foundation.js"></script>
+<script type="text/javascript" src="./graph/d3.js"></script>
+<script type="text/javascript" src="./graph/d3.geom.js"></script>
+<script type="text/javascript" src="./graph/d3.layout.js"></script>
+<script type="text/javascript" src="./graph/d3.time.js"></script>
+<script type="text/javascript" src="./graph/d3.word.cloud.js">   </script>
+<script type="text/javascript" src="./graph/graph-ic.js"></script>
+<script>
+$(document).ready(function() {
+$('#go').click(function() {
+  $.ajax({
+  type : 'POST',
+  url : '/submit',
+  data : $('#stream_creds').serialize(),
+  success : function(response) {
+  $('#ContactForm').find('.form_result').html(response);
+  }
+  });
+  });
+  });</script>
+<!--<container> </container>-->
+<div class="container"><div class="row"><div class="eight columns">
+<img src="./images/socketio.png">
+<div class="panel"><h4>Total interactions:<span id="countTotal"></span></h4></div>
+</div>
+
+<div class="four columns">
+	<div class="panel hide-on-phones">
+		<form id="stream_creds" class="nice">
+		<!--
+		<input type="text" placeholder="User Name" name="username" class="input-text">
+		<input type="text" placeholder="API Key" name="apikey" class="input-text">
+		<input type="text" placeholder="Stream ID" name="streamid" class="input-text">
+		-->
+		<input type="text" placeholder="Count" name="count" class="input-text">
+		</form>
+	</div>
+	<p>
+	<a id="go" href="http://localhost:8080/#" class="nice radius blue button mobile src-download">Subscribe</a>
+	</p>
+</div>
+
+<div class="row"><div class="one columns"></div>
+<div class="ten columns"><ul class="nice tabs-content"><li id="nice1Tab" class="active">            <div id="interactions"></div>
+<style type="text/css">svg {
+ font: 10px sans-serif;
+}
+.line {
+fill: none;
+stroke: #333;
+stroke-width: 1.5px;
+}
+.axis path, .axis line {
+fill: none;
+stroke: #333;
+shape-rendering: crispEdges;
+}
+.text {
+fill: #333;
+}
+.data-line {
+stroke: #F00;
+stroke-width: 2;
+fill: none;
+stroke-dasharray: 0;
+} </style></li></ul></div>
+</div>
+<!--<container> </container>-->
+</div>
+</div>
+</body>
+</html>
