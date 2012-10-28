@@ -43,6 +43,7 @@ public class D3SocketServlet extends SocketIOServlet {
 	private class EchoConnectionImpl implements SocketIOInbound {
 		private volatile SocketIOOutbound outbound = null;
 		private Intercepter objIntercepter = null;
+		private D3HttpServlet objD3HttpServlet = new D3HttpServlet();
 		
 		EchoConnectionImpl(Intercepter a){
 			this.objIntercepter = a;
@@ -64,13 +65,21 @@ public class D3SocketServlet extends SocketIOServlet {
 		public void onMessage(String strKey, String message) {
 			int sleepTime = 1;
 			int intLoops = 1000;
+			int intInitial = D3HttpServlet.getIntCount();
+			
 			while(intLoops-- > 0){
 	            try {
 	                Thread.sleep((long) (sleepTime * (Math.random()*1000+10)));
 	            } catch (InterruptedException e) {
 	                // Ignore
 	            }
-	            objIntercepter.emit(this.outbound, "data", Integer.toString(intLoops));
+	            if(intInitial != D3HttpServlet.getIntCount()){
+	            	intLoops = D3HttpServlet.getIntCount();
+	            	intInitial = D3HttpServlet.getIntCount();
+	            	objIntercepter.emit(this.outbound, "reset", Integer.toString(intLoops));
+	            }else{
+	            	objIntercepter.emit(this.outbound, "data", Integer.toString(intLoops));
+	            }
 			}
         }
 

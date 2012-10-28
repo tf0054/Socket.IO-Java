@@ -114,12 +114,14 @@ $(document).ready(function() {
 		this.tick();
 
 		socket.on('data', function(streamData) {
-	
 			$('#countTotal').html(countTotal++);
-			//if(streamData.source.interaction.id != undefined)
-			//{
-				++count;
-			//}
+			++count;
+		});
+		
+		socket.on('reset', function(streamData) {
+			count = 0;
+			countTotal = 0;
+			$('#countTotal').html(countTotal);
 		});
 		socket.emit("message", "OK");
 	})(); 
