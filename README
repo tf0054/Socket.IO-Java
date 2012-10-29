@@ -1,6 +1,6 @@
 Java backend integration for Socket.IO library (http://socket.io/)
 
-This version can handle various message type like json-message, event-message.
+This version can handle namescape and various message type like json-message, event-message via websocket, jsonp, xhr.
 
 To use in a jetty webapp, grant access in your jetty xml file to the jetty server class org.eclipse.jetty.server.HttpConnection
 

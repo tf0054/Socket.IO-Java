@@ -1,7 +1,7 @@
 $(document).ready(function() {
-	var InteractionCounter = (function() {
-	
-		var socket = io.connect('http://localhost:8080');
+	var InteractionCounter = (function() {	
+		
+		var boolColorChange = true;
 		var countTotal = 1;
 		
 		var n = 243,
@@ -58,7 +58,8 @@ $(document).ready(function() {
 		    .attr("clip-path", "url(#clip)")
 		  .append("path")
 		    .data([data])
-		    .attr("class", "line");
+		    .attr("class", "line")
+		    .style("stroke", "rgb(6,120,155)");
 	      
 		// Y axis label
 		yaxsis.append("text")
@@ -67,7 +68,6 @@ $(document).ready(function() {
 		
 			
 		this.tick = (function() {
-
 		  	// update the domains
 		  	now = new Date();
 		  	
@@ -94,12 +94,22 @@ $(document).ready(function() {
 		      	.call(x.axis);
 		
 		  	// slide the line left
-		  	path.transition()
+		  	if(boolColorChange){
+			  	path.transition()
 		  		.duration(duration)
 		      	.ease("linear")
 		      	.attr("transform", "translate(" + x(now - (n - 1) * duration) + ")")
+  			    .style("stroke", "rgb(6,120,155)")
 		      	.each("end", tick);
-		
+		  	}else{
+			  	path.transition()
+		  		.duration(duration)
+		      	.ease("linear")
+		      	.attr("transform", "translate(" + x(now - (n - 1) * duration) + ")")
+  			    .style("stroke", "rgb(255,120,155)")
+		      	.each("end", tick);
+		  	}
+
 			// Y Axis
 			yaxsis.transition()
 		 		.attr("class", "y axis")
@@ -121,9 +131,12 @@ $(document).ready(function() {
 		socket.on('reset', function(streamData) {
 			count = 0;
 			countTotal = 0;
+			if(boolColorChange){
+	  			boolColorChange = false;
+			}else{
+				boolColorChange = true;
+			}
 			$('#countTotal').html(countTotal);
 		});
-		socket.emit("message", "OK");
 	})(); 
-
 });

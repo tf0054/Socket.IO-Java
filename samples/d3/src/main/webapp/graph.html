@@ -26,18 +26,38 @@
 <script type="text/javascript" src="/graph/d3.word.cloud.js">   </script>
 <script type="text/javascript" src="/graph/graph-ic.js"></script>
 <script>
+var socket = io.connect('http://localhost:8080');
+
 $(document).ready(function() {
-$('#go').click(function() {
-  $.ajax({
-  type : 'POST',
-  url : '/submit',
-  data : $('#stream_creds').serialize(),
-  success : function(response) {
-  $('#ContactForm').find('.form_result').html(response);
-  }
+  $('#go').click(function() {
+	$.ajax({
+	  type : 'POST',
+	  url : '/submit',
+	  data : $('#stream_creds').serialize(),
+	  success : function(response) {
+		$('#ContactForm').find('.form_result').html(response);
+	  }
+	});
   });
+  $('#start').click(function() {
+	  startMessage();
   });
-  });</script>
+  $('#stop').click(function() {
+	  stopMessage();
+  });
+	
+	function startMessage(){
+		socket.emit("start", "1");
+	}
+	
+	function stopMessage(){
+		socket.emit("stop", "1");
+	}
+	
+	// initial access to server (server will start sending messages)
+	startMessage();
+});
+</script>
 <!--<container> </container>-->
 <div class="container"><div class="row"><div class="eight columns">
 <img src="./images/socketio.png">
@@ -56,34 +76,38 @@ $('#go').click(function() {
 		</form>
 	</div>
 	<p>
+	<a id="start" href="http://localhost:8080/#" class="nice radius blue button mobile src-download">Start</a>
 	<a id="go" href="http://localhost:8080/#" class="nice radius blue button mobile src-download">Subscribe</a>
+	<a id="stop" href="http://localhost:8080/#" class="nice radius blue button mobile src-download">Stop</a>
 	</p>
 </div>
 
 <div class="row"><div class="one columns"></div>
 <div class="ten columns"><ul class="nice tabs-content"><li id="nice1Tab" class="active">            <div id="interactions"></div>
-<style type="text/css">svg {
- font: 10px sans-serif;
+<style type="text/css">
+svg {
+	font: 10px sans-serif;
 }
 .line {
-fill: none;
-stroke: #333;
-stroke-width: 1.5px;
+	fill: none;
+	stroke: #333;
+	stroke-width: 1.5px;
 }
 .axis path, .axis line {
-fill: none;
-stroke: #333;
-shape-rendering: crispEdges;
+	fill: none;
+	stroke: #333;
+	shape-rendering: crispEdges;
 }
 .text {
-fill: #333;
+	fill: #333;
 }
 .data-line {
-stroke: #F00;
-stroke-width: 2;
-fill: none;
-stroke-dasharray: 0;
-} </style></li></ul></div>
+	stroke: #F00;
+	stroke-width: 2;
+	fill: none;
+	stroke-dasharray: 0;
+} </style>
+</li></ul></div>
 </div>
 <!--<container> </container>-->
 </div>

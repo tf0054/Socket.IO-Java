@@ -36,6 +36,7 @@ import com.glines.socketio.server.SocketIOOutbound;
 import com.glines.socketio.server.SocketIOServlet;
 import com.glines.socketio.server.transport.jetty.JettyWebSocketTransportHandler;
 import com.glines.socketio.util.Intercepter;
+import com.glines.socketio.util.InterceptedSocketIOInbound;
 
 import com.google.gson.Gson;
 
@@ -43,7 +44,7 @@ public class PointersShareServlet extends SocketIOServlet {
 	private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = Logger.getLogger(JettyWebSocketTransportHandler.class.getName());
 
-	private class PointersConnectionImpl implements SocketIOInbound {
+	private class PointersConnectionImpl extends InterceptedSocketIOInbound {
 		private volatile SocketIOOutbound outbound = null;
 		private Intercepter objIntercepter = null;
      	private Gson gson = new Gson();
@@ -92,10 +93,6 @@ public class PointersShareServlet extends SocketIOServlet {
         public String[] setEventnames() {
         	return new String[]{"updatePointer", "clearPointer", "puffPointer"};
         }
-
-		@Override
-		public void setNamespace(String a) {
-		}
 	}
 
 	@Override

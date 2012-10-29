@@ -24,7 +24,6 @@
  */
 package com.glines.socketio.sample.d3;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.logging.Logger;
 
@@ -35,15 +34,16 @@ import com.glines.socketio.server.SocketIOInbound;
 import com.glines.socketio.server.SocketIOOutbound;
 import com.glines.socketio.server.SocketIOServlet;
 import com.glines.socketio.util.Intercepter;
+import com.glines.socketio.util.InterceptedSocketIOInbound;
 
 public class D3SocketServlet extends SocketIOServlet {
 	private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = Logger.getLogger(D3SocketServlet.class.getName());
 
-	private class EchoConnectionImpl implements SocketIOInbound {
+	//private class EchoConnectionImpl implements SocketIOInbound {
+    private class EchoConnectionImpl extends InterceptedSocketIOInbound {
 		private volatile SocketIOOutbound outbound = null;
 		private Intercepter objIntercepter = null;
-		private D3HttpServlet objD3HttpServlet = new D3HttpServlet();
 		
 		EchoConnectionImpl(Intercepter a){
 			this.objIntercepter = a;
@@ -58,8 +58,8 @@ public class D3SocketServlet extends SocketIOServlet {
 
 		@Override
 		public void onDisconnect(DisconnectReason reason, String errorMessage) {
-				this.outbound = null;
-			}
+			this.outbound = null;
+		}
 
 		@Override
 		public void onMessage(String strKey, String message) {
@@ -67,13 +67,19 @@ public class D3SocketServlet extends SocketIOServlet {
 			int intLoops = 1000;
 			int intInitial = D3HttpServlet.getIntCount();
 			
+			if(strKey.equals("stop")){
+				D3HttpServlet.setIntCount(0);
+			}
+			
 			while(intLoops-- > 0){
 	            try {
 	                Thread.sleep((long) (sleepTime * (Math.random()*1000+10)));
 	            } catch (InterruptedException e) {
 	                // Ignore
 	            }
+	            // the number of loops was changed.
 	            if(intInitial != D3HttpServlet.getIntCount()){
+	            	LOGGER.info("loop was changed: " + intInitial + " -> " + D3HttpServlet.getIntCount());
 	            	intLoops = D3HttpServlet.getIntCount();
 	            	intInitial = D3HttpServlet.getIntCount();
 	            	objIntercepter.emit(this.outbound, "reset", Integer.toString(intLoops));
@@ -85,11 +91,7 @@ public class D3SocketServlet extends SocketIOServlet {
 
         @Override
         public String[] setEventnames() {
-        	return new String[]{"message"};
-        }
-
-        public void setNamespace(String a) {
-        	//objIntercepter.setNamespace(a);
+        	return new String[]{"start", "stop"};
         }
 	}
 	
@@ -106,5 +108,4 @@ public class D3SocketServlet extends SocketIOServlet {
 
 		return objIntercepter.getProxyObj();
 	}
-
 }

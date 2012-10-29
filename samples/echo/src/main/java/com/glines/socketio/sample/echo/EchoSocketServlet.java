@@ -35,12 +35,13 @@ import com.glines.socketio.server.SocketIOInbound;
 import com.glines.socketio.server.SocketIOOutbound;
 import com.glines.socketio.server.SocketIOServlet;
 import com.glines.socketio.util.Intercepter;
+import com.glines.socketio.util.InterceptedSocketIOInbound;
 
 public class EchoSocketServlet extends SocketIOServlet {
 	private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = Logger.getLogger(EchoSocketServlet.class.getName());
 
-	private class EchoConnectionImpl implements SocketIOInbound {
+	private class EchoConnectionImpl extends InterceptedSocketIOInbound {
 		private volatile SocketIOOutbound outbound = null;
 		private Intercepter objIntercepter = null;
 		
@@ -56,8 +57,8 @@ public class EchoSocketServlet extends SocketIOServlet {
 
 		@Override
 		public void onDisconnect(DisconnectReason reason, String errorMessage) {
-				this.outbound = null;
-			}
+			this.outbound = null;
+		}
 
 		@Override
 		public void onMessage(String strKey, String message) {
@@ -72,13 +73,9 @@ public class EchoSocketServlet extends SocketIOServlet {
         public String[] setEventnames() {
         	return new String[]{"message"};
         }
-
-        public void setNamespace(String a) {
-        	//objIntercepter.setNamespace(a);
-        }
 	}
 	
-	private class EchoConnectionImplWithAsterisk implements SocketIOInbound {
+	private class EchoConnectionImplWithAsterisk extends InterceptedSocketIOInbound {
 		private volatile SocketIOOutbound outbound = null;
 		private Intercepter objIntercepter = null;
 		
@@ -93,8 +90,8 @@ public class EchoSocketServlet extends SocketIOServlet {
 
 		@Override
 		public void onDisconnect(DisconnectReason reason, String errorMessage) {
-				this.outbound = null;
-			}
+			this.outbound = null;
+		}
 
 		@Override
 		public void onMessage(String strKey, String message) {
@@ -108,10 +105,6 @@ public class EchoSocketServlet extends SocketIOServlet {
         @Override
         public String[] setEventnames() {
         	return new String[]{"message"};
-        }
-        
-        public void setNamespace(String a) {
-        	//objIntercepter.setNamespace(a);
         }
 	}
 

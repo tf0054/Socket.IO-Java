@@ -24,10 +24,18 @@ public class D3HttpServlet extends HttpServlet {
 //        apikey = request.getParameter("apikey");
 //        streamid = request.getParameter("streamid");
     	setIntCount(Integer.parseInt(request.getParameter("count")));
-//        User user = userDAO.find(username, password);
-        response.sendRedirect("/?random="+Math.random()*1000);
-//        request.setAttribute("error", "Unknown user, please try again");
-//        request.getRequestDispatcher("/login.jsp").forward(request, response);
+
+        response.setContentType("text/html;charset=UTF-8");
+        java.io.PrintWriter out = response.getWriter();
+        out.println("<html>");
+        out.println("<head>");
+        out.println("<title>Thanks</title>");  
+        out.println("</head>");
+        out.println("<body>");
+        out.println("Thanks.");
+        out.println("</body>");
+        out.println("</html>");
+        out.close();
     }
 
 	public static int getIntCount() {
